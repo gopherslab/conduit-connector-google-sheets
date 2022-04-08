@@ -15,7 +15,7 @@
 package googlesheets
 
 import (
-	"github.com/conduitio/conduit-connector-generator/config"
+	"github.com/conduitio/conduit-connector-google-sheets/config"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
