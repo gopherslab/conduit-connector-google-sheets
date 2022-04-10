@@ -3,22 +3,27 @@ package source
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/conduitio/conduit-connector-google-sheets/config"
+	"github.com/conduitio/conduit-connector-google-sheets/source/iterator"
+
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"golang.org/x/oauth2"
-	"google.golang.org/api/option"
-	"google.golang.org/api/sheets/v4"
 )
 
 type Source struct {
 	sdk.UnimplementedSource
 
 	client     *http.Client
-	service    *sheets.Service
+	iterator   Iterator
 	configData config.Config
+}
+
+type Iterator interface {
+	HasNext(ctx context.Context) bool
+	Next(ctx context.Context) (sdk.Record, error)
+	Stop()
 }
 
 func NewSource() sdk.Source {
@@ -50,37 +55,38 @@ func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
 
 // Open prepare the plugin to start sending records from the given position
 func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
-	service, err := sheets.NewService(ctx, option.WithHTTPClient(s.client))
+	// service, err := sheets.NewService(ctx, option.WithHTTPClient(s.client))
+	// if err != nil {
+	// 	return err
+	// }
+
+	var err error
+	s.iterator, err = iterator.NewCDCIterator(ctx, s.client, s.configData.GoogleSpreadsheetId, s.configData.GoogleSpreadsheetRange)
 	if err != nil {
-		return err
+		return fmt.Errorf("couldn't create a iterator: %w", err)
 	}
 
-	s.service = service
 	return nil
 }
 
 // Read gets the next object
 func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
-	r := sdk.Record{}
-	sheetData, err := s.service.Spreadsheets.Values.Get(s.configData.GoogleSpreadsheetId, s.configData.GoogleSpreadsheetRange).Do()
+	if !s.iterator.HasNext(ctx) {
+		return sdk.Record{}, sdk.ErrBackoffRetry
+	}
+	r, err := s.iterator.Next(ctx)
 	if err != nil {
-		log.Fatalf("Unable to retrieve data from sheet: %v", err)
-		return r, err
+		return sdk.Record{}, err
 	}
-
-	if len(sheetData.Values) == 0 {
-		log.Fatalf("spreadheet has no value:%v", err)
-		return r, err
-	} else {
-		for _, row := range sheetData.Values {
-			fmt.Printf("%s\n", row)
-		}
-	}
-
 	return r, nil
 }
 
 func (s *Source) Teardown(ctx context.Context) error {
+	if s.iterator != nil {
+		s.iterator.Stop()
+		s.iterator = nil
+	}
+
 	return nil
 }
 
