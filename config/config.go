@@ -35,24 +35,23 @@ type Config struct {
 }
 
 func Parse(config map[string]string) (Config, error) {
-
 	accessToken, ok := config[ConfigKeyGoogleAccessToken]
-	if !ok {
+	if !ok || accessToken == "" {
 		return Config{}, requiredConfigErr(ConfigKeyGoogleAccessToken)
 	}
 
 	refreshToken, ok := config[ConfigKeyRefreshToken]
-	if !ok {
+	if !ok || refreshToken == "" {
 		return Config{}, requiredConfigErr(ConfigKeyRefreshToken)
 	}
 
 	spreadsheetId, ok := config[ConfigKeyGoogleSpreadsheetId]
-	if !ok {
+	if !ok || spreadsheetId == "" {
 		return Config{}, requiredConfigErr(ConfigKeyGoogleSpreadsheetId)
 	}
 
 	sheetRange, ok := config[ConfigKeyGoogleSpreadsheetRange]
-	if !ok {
+	if !ok || sheetRange == "" {
 		return Config{}, requiredConfigErr(ConfigKeyGoogleSpreadsheetRange)
 	}
 
