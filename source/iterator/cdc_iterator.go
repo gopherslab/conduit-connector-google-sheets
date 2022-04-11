@@ -57,8 +57,8 @@ func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
 	// create the record
 	output := sdk.Record{
 		Metadata: map[string]string{
-			"range": i.sheetsValue.Range,
-			"dimension":    i.sheetsValue.MajorDimension,
+			"range":     i.sheetsValue.Range,
+			"dimension": i.sheetsValue.MajorDimension,
 		},
 		// Position:  p.ToRecordPosition(),
 		Payload: sdk.RawData(rawData),
