@@ -19,17 +19,17 @@ import (
 )
 
 const (
-	ConfigKeyGoogleAccessToken      = "access_token"
-	ConfigKeyRefreshToken           = "refresh_token"
+	ConfigKeyGoogleAccessToken = "access_token"
+	// ConfigKeyRefreshToken            = "refresh_token"
+	// ConfigKeyGoogleAccessTokenExpiry = "expiry"
 	ConfigKeyGoogleSpreadsheetId    = "spreadsheet_id"
 	ConfigKeyGoogleSpreadsheetRange = "range"
 )
 
-// var knownFieldTypes = []string{"int", "string", "time", "bool"}
-
 type Config struct {
-	GoogleAccessToken      string
-	RefreshToken           string
+	GoogleAccessToken string
+	// RefreshToken            string
+	// GoogleAccessTokenExpiry time.Time
 	GoogleSpreadsheetId    string
 	GoogleSpreadsheetRange string
 }
@@ -40,10 +40,19 @@ func Parse(config map[string]string) (Config, error) {
 		return Config{}, requiredConfigErr(ConfigKeyGoogleAccessToken)
 	}
 
-	refreshToken, ok := config[ConfigKeyRefreshToken]
-	if !ok || refreshToken == "" {
-		return Config{}, requiredConfigErr(ConfigKeyRefreshToken)
-	}
+	// refreshToken, ok := config[ConfigKeyGoogleAccessToken]
+	// if !ok || accessToken == "" {
+	// 	return Config{}, requiredConfigErr(ConfigKeyGoogleAccessToken)
+	// }
+
+	// var tokenExpiry time.Time
+	// if expiry, ok := config[ConfigKeyGoogleAccessToken]; ok {
+	// 	e, err := time.Parse("DD-MM-YYYY", expiry)
+	// 	if err != nil {
+	// 		log.Printf("%v", err)
+	// 	}
+	// 	tokenExpiry = e
+	// }
 
 	spreadsheetId, ok := config[ConfigKeyGoogleSpreadsheetId]
 	if !ok || spreadsheetId == "" {
@@ -56,8 +65,9 @@ func Parse(config map[string]string) (Config, error) {
 	}
 
 	cfg := Config{
-		GoogleAccessToken:      accessToken,
-		RefreshToken:           refreshToken,
+		GoogleAccessToken: accessToken,
+		// RefreshToken:            refreshToken,
+		// GoogleAccessTokenExpiry: tokenExpiry,
 		GoogleSpreadsheetId:    spreadsheetId,
 		GoogleSpreadsheetRange: sheetRange,
 	}

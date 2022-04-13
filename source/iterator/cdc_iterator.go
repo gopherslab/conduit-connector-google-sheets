@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	// "github.com/conduitio/conduit-connector-google-sheets/config"
-
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
@@ -16,6 +14,8 @@ type CDCIterator struct {
 	service     *sheets.Service
 	sheetsValue *sheets.ValueRange
 }
+
+var counter int
 
 func NewCDCIterator(ctx context.Context, client *http.Client, spreadsheetId string, sheetRange string) (*CDCIterator, error) {
 	var err error
@@ -29,6 +29,11 @@ func NewCDCIterator(ctx context.Context, client *http.Client, spreadsheetId stri
 		return nil, err
 	}
 
+	counter = 0
+	counter = len(sheetData.Values)
+
+	fmt.Println("Data from GSA: ", sheetData)
+
 	c := &CDCIterator{
 		service:     srv,
 		sheetsValue: sheetData,
@@ -39,16 +44,17 @@ func NewCDCIterator(ctx context.Context, client *http.Client, spreadsheetId stri
 }
 
 func (i *CDCIterator) HasNext(ctx context.Context) bool {
-	return len(i.sheetsValue.Values) == 0
+	if counter > 0 {
+		counter -= 1
+		return true
+
+	}
+
+	return false
 }
 
 func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
 	// read object
-	// sheetData, err := i.service.Spreadsheets.Values.Get(i.configData.GoogleSpreadsheetId, i.configData.GoogleSpreadsheetRange).Do()
-	// if err != nil {
-	// 	return sdk.Record{}, err
-	// }
-
 	rawData, err := i.sheetsValue.MarshalJSON()
 	if err != nil {
 		return sdk.Record{}, fmt.Errorf("could not read the object's body: %w", err)
@@ -71,5 +77,5 @@ func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
 }
 
 func (i *CDCIterator) Stop() {
-	// nothing to stop
+	// under development
 }

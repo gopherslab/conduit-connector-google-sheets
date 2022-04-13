@@ -20,10 +20,9 @@ import (
 
 func TestParse(t *testing.T) {
 	result, err := Parse(map[string]string{
-		"access_token":   "",
-		"refresh_token":  "",
-		"spreadsheet_id": "",
-		"range":          "",
+		"access_token":   "ya29.A0ARrdaM-XqU2M3QzTTr-M-WB7nLXoHYqz3YQB4bCZzIOVpsB0sE59RFUDNl-fqfhPvv4TX_h9zZOaxGtEAao9vvHtN52MmKoYtTtOWwT5ozZV3tGfqI6sJX9d3FbM17KvbXzU4qsspLXa91Kso_Ux0EzNK8ZG",
+		"spreadsheet_id": "1gQjm4hnSdrMFyPjhlwSGLBbj0ACOxFQJpVST1LmW6Hg",
+		"range":          "Sheet1",
 	})
 
 	if err != nil {

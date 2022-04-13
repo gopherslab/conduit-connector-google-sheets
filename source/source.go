@@ -42,9 +42,8 @@ func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
 	}
 
 	token := &oauth2.Token{
-		AccessToken:  config2.GoogleAccessToken,
-		TokenType:    "Bearer",
-		RefreshToken: config2.RefreshToken,
+		AccessToken: config2.GoogleAccessToken,
+		TokenType:   "Bearer",
 	}
 
 	var authCfg *oauth2.Config
@@ -55,11 +54,6 @@ func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
 
 // Open prepare the plugin to start sending records from the given position
 func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
-	// service, err := sheets.NewService(ctx, option.WithHTTPClient(s.client))
-	// if err != nil {
-	// 	return err
-	// }
-
 	var err error
 	s.iterator, err = iterator.NewCDCIterator(ctx, s.client, s.configData.GoogleSpreadsheetId, s.configData.GoogleSpreadsheetRange)
 	if err != nil {
@@ -84,6 +78,7 @@ func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
 func (s *Source) Teardown(ctx context.Context) error {
 	if s.iterator != nil {
 		s.iterator.Stop()
+		s.client = nil
 		s.iterator = nil
 	}
 
