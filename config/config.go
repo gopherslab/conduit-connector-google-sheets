@@ -31,7 +31,7 @@ type Config struct {
 	// RefreshToken            string
 	// GoogleAccessTokenExpiry time.Time
 	GoogleSpreadsheetId    string
-	GoogleSpreadsheetRange string
+	// GoogleSpreadsheetRange string
 }
 
 func Parse(config map[string]string) (Config, error) {
@@ -59,17 +59,15 @@ func Parse(config map[string]string) (Config, error) {
 		return Config{}, requiredConfigErr(ConfigKeyGoogleSpreadsheetId)
 	}
 
-	sheetRange, ok := config[ConfigKeyGoogleSpreadsheetRange]
-	if !ok || sheetRange == "" {
-		return Config{}, requiredConfigErr(ConfigKeyGoogleSpreadsheetRange)
-	}
+	// sheetRange, ok := config[ConfigKeyGoogleSpreadsheetRange]
+	// if !ok || sheetRange == "" {
+	// 	return Config{}, requiredConfigErr(ConfigKeyGoogleSpreadsheetRange)
+	// }
 
 	cfg := Config{
 		GoogleAccessToken: accessToken,
-		// RefreshToken:            refreshToken,
-		// GoogleAccessTokenExpiry: tokenExpiry,
 		GoogleSpreadsheetId:    spreadsheetId,
-		GoogleSpreadsheetRange: sheetRange,
+		// GoogleSpreadsheetRange: sheetRange,
 	}
 
 	return cfg, nil

@@ -40,11 +40,6 @@ func Specification() sdk.Specification {
 				Required:    true,
 				Description: "Google sheet id to fetch the records",
 			},
-			config.ConfigKeyGoogleSpreadsheetRange: {
-				Default:     "",
-				Required:    true,
-				Description: "Spreadsheet Range",
-			},
 		},
 	}
 }

@@ -36,10 +36,7 @@ func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
 		return err
 	}
 
-	s.configData = config.Config{
-		GoogleSpreadsheetId:    config2.GoogleSpreadsheetId,
-		GoogleSpreadsheetRange: config2.GoogleSpreadsheetRange,
-	}
+	s.configData = config.Config{GoogleSpreadsheetId: config2.GoogleSpreadsheetId}
 
 	token := &oauth2.Token{
 		AccessToken: config2.GoogleAccessToken,
@@ -55,7 +52,7 @@ func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
 // Open prepare the plugin to start sending records from the given position
 func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
 	var err error
-	s.iterator, err = iterator.NewCDCIterator(ctx, s.client, s.configData.GoogleSpreadsheetId, s.configData.GoogleSpreadsheetRange)
+	s.iterator, err = iterator.NewCDCIterator(ctx, s.client, s.configData.GoogleSpreadsheetId)
 	if err != nil {
 		return fmt.Errorf("couldn't create a iterator: %w", err)
 	}
@@ -68,6 +65,7 @@ func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
 	if !s.iterator.HasNext(ctx) {
 		return sdk.Record{}, sdk.ErrBackoffRetry
 	}
+
 	r, err := s.iterator.Next(ctx)
 	if err != nil {
 		return sdk.Record{}, err
