@@ -15,15 +15,10 @@ import (
 type CDCIterator struct {
 	service       *sheets.Service
 	spreadsheetId string
+	iter          bool
 }
 
-type Position struct {
-	Key       string
-	Timestamp time.Time
-	// Type      Type
-}
-
-var limit, offset int64
+var offset, count int64
 
 func NewCDCIterator(ctx context.Context, client *http.Client, spreadsheetId string) (*CDCIterator, error) {
 	var err error
@@ -41,14 +36,36 @@ func NewCDCIterator(ctx context.Context, client *http.Client, spreadsheetId stri
 }
 
 func (i *CDCIterator) HasNext(ctx context.Context) bool {
-	return offset > 0 //|| lastModified == 0
+	sdk.Logger(ctx).Info().Msg("This is HasNext")
+	sdk.Logger(ctx).Info().Msg(fmt.Sprintf("%v", offset))
+	sdk.Logger(ctx).Info().Msg(fmt.Sprintf("%v", (offset == 0)))
+
+	sdk.Logger(ctx).Info().Msg(fmt.Sprintf("Bool value of iter: %v", i.iter))
+	return offset == 0 || i.iter
 }
 
 func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
+	sdk.Logger(ctx).Info().Msg("This is next function")
+
 	// read object
 	sheetData, err := fetchSheetData(ctx, i.service, i.spreadsheetId, offset)
 	if err != nil {
 		return sdk.Record{}, err
+	}
+
+	if sheetData.s.Values == nil {
+		sdk.Logger(ctx).Info().Msg("Data is coming nil")
+		i.iter = false
+
+		return sdk.Record{
+			Metadata: map[string]string{
+				"SpreadsheetId": i.spreadsheetId,
+				"SheetId":       "0",
+				"dimension":     sheetData.s.MajorDimension,
+			},
+			Position:  []byte(fmt.Sprintf("%d", sheetData.rowCount)),
+			CreatedAt: time.Now(),
+		}, nil
 	}
 
 	rawData, err := json.Marshal(sheetData.s.Values)
@@ -72,22 +89,26 @@ func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
 
 	sdk.Logger(ctx).Info().Msg(fmt.Sprintf("Data: %s", output))
 	offset = sheetData.rowCount
+	i.iter = true
 	return output, nil
 }
 
 func (i *CDCIterator) Stop() {
-	// under development
+	sdk.Logger(context.TODO()).Info().Msg("Hey this is inside the stop function")
+	if !i.iter {
+		sdk.Logger(context.TODO()).Info().Msg("Getting inside if statement of the stop function")
+		return
+	}
 }
 
 func fetchSheetData(ctx context.Context, srv *sheets.Service, spreadsheetId string, offset int64) (*Object, error) {
 	var s sheets.DataFilter
-
 	dataFilters := []*sheets.DataFilter{}
-	limit = offset + 10
+	
 	s.GridRange = &sheets.GridRange{
 		SheetId:       0,
 		StartRowIndex: offset,
-		EndRowIndex:   limit,
+		EndRowIndex:   offset + 5,
 	}
 
 	dataFilters = append(dataFilters, &s)
@@ -104,12 +125,20 @@ func fetchSheetData(ctx context.Context, srv *sheets.Service, spreadsheetId stri
 		return nil, err
 	}
 
-	obj := &Object{
-		s:        res.ValueRanges[0].ValueRange,
-		rowCount: limit,
+	if res == nil {
+		count = offset + 0
+		return &Object{
+			s:        nil,
+			rowCount: count,
+		}, nil
 	}
 
-	return obj, nil
+	count = offset + int64(len(res.ValueRanges[0].ValueRange.Values))
+	return &Object{
+		s:        res.ValueRanges[0].ValueRange,
+		rowCount: count,
+	}, nil
+
 }
 
 type Object struct {

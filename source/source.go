@@ -63,9 +63,11 @@ func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
 // Read gets the next object
 func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
 	if !s.iterator.HasNext(ctx) {
+		sdk.Logger(ctx).Info().Msg("This is in hasnext error block")
 		return sdk.Record{}, sdk.ErrBackoffRetry
 	}
 
+	sdk.Logger(ctx).Info().Msg("This is entering in next")
 	r, err := s.iterator.Next(ctx)
 	if err != nil {
 		return sdk.Record{}, err
@@ -74,6 +76,7 @@ func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
 }
 
 func (s *Source) Teardown(ctx context.Context) error {
+	sdk.Logger(ctx).Info().Msg("This is entering in stop")
 	if s.iterator != nil {
 		s.iterator.Stop()
 		s.client = nil
@@ -84,5 +87,6 @@ func (s *Source) Teardown(ctx context.Context) error {
 }
 
 func (s *Source) Ack(ctx context.Context, position sdk.Position) error {
+	sdk.Logger(ctx).Info().Msg("This is ack")
 	return nil
 }
