@@ -7,6 +7,7 @@ import (
 
 	"github.com/conduitio/conduit-connector-google-sheets/config"
 	"github.com/conduitio/conduit-connector-google-sheets/source/iterator"
+	"github.com/conduitio/conduit-connector-google-sheets/source/position"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"golang.org/x/oauth2"
@@ -51,7 +52,7 @@ func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
 
 // Open prepare the plugin to start sending records from the given position
 func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
-	p, err := iterator.ParseRecordPosition(rp)
+	p, err := position.ParseRecordPosition(rp)
 	if err != nil {
 		return fmt.Errorf("couldn't parse position: %w", err)
 	}

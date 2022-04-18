@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
@@ -18,10 +17,6 @@ type CDCIterator struct {
 	spreadsheetId string
 	iter          bool
 	endPage       int64
-}
-type Position struct {
-	Key       int64
-	Timestamp time.Time
 }
 
 func NewCDCIterator(ctx context.Context, client *http.Client, spreadsheetId string, p int64) (*CDCIterator, error) {
@@ -150,25 +145,4 @@ func fetchSheetData(ctx context.Context, srv *sheets.Service, spreadsheetId stri
 type Object struct {
 	s        *sheets.ValueRange
 	rowCount int64
-}
-
-func ParseRecordPosition(p sdk.Position) (Position, error) {
-	s := string(p)
-	var err error
-	if s == "" {
-		return Position{
-			Key:       0,
-			Timestamp: time.Unix(0, 0),
-		}, err
-	}
-
-	page, err := strconv.Atoi(s)
-	if err != nil {
-		return Position{}, fmt.Errorf("could not parse the position timestamp: %w", err)
-	}
-
-	return Position{
-		Key:       int64(page),
-		Timestamp: time.Unix(0, 0),
-	}, err
 }
