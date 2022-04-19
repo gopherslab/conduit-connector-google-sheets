@@ -12,6 +12,11 @@ import (
 	"google.golang.org/api/sheets/v4"
 )
 
+type Object struct {
+	s        *sheets.ValueRange
+	rowCount int64
+}
+
 type CDCIterator struct {
 	service       *sheets.Service
 	client        *http.Client
@@ -39,11 +44,6 @@ func NewCDCIterator(ctx context.Context, client *http.Client, spreadsheetId stri
 
 func (i *CDCIterator) HasNext(ctx context.Context) bool {
 	sdk.Logger(ctx).Info().Msg("This is HasNext")
-	sdk.Logger(ctx).Info().Msg(fmt.Sprintf("%v", i.endPage))
-	sdk.Logger(ctx).Info().Msg(fmt.Sprintf("%v", (i.endPage == 0)))
-
-	sdk.Logger(ctx).Info().Msg(fmt.Sprintf("Bool value of iter: %v", i.iter))
-
 	return i.endPage > 0 || !i.iter
 }
 
@@ -70,9 +70,6 @@ func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
 		return sdk.Record{}, fmt.Errorf("could not read the object's body: %w", err)
 	}
 
-	sdk.Logger(ctx).Info().Msg("Data from rawData: " + string(rawData))
-
-	sdk.Logger(ctx).Info().Msg("This is positionCount: " + string([]byte(fmt.Sprintf(" %d", sheetData.rowCount))))
 	// create the record
 	output := sdk.Record{
 		Metadata: map[string]string{
@@ -106,7 +103,6 @@ func fetchSheetData(ctx context.Context, srv *sheets.Service, spreadsheetId stri
 	s.GridRange = &sheets.GridRange{
 		SheetId:       0,
 		StartRowIndex: offset,
-		// EndRowIndex:   offset + 10,
 	}
 
 	dataFilters = append(dataFilters, &s)
@@ -136,9 +132,4 @@ func fetchSheetData(ctx context.Context, srv *sheets.Service, spreadsheetId stri
 		rowCount: count,
 	}, nil
 
-}
-
-type Object struct {
-	s        *sheets.ValueRange
-	rowCount int64
 }
