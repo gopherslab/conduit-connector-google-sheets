@@ -14,6 +14,7 @@ import (
 
 type CDCIterator struct {
 	service       *sheets.Service
+	client        *http.Client
 	spreadsheetId string
 	iter          bool
 	endPage       int64
@@ -28,6 +29,7 @@ func NewCDCIterator(ctx context.Context, client *http.Client, spreadsheetId stri
 
 	c := &CDCIterator{
 		service:       srv,
+		client:        client,
 		spreadsheetId: spreadsheetId,
 		endPage:       p,
 	}
@@ -42,7 +44,6 @@ func (i *CDCIterator) HasNext(ctx context.Context) bool {
 
 	sdk.Logger(ctx).Info().Msg(fmt.Sprintf("Bool value of iter: %v", i.iter))
 
-	// return i.endPage == 0 || i.iter
 	return i.endPage > 0 || !i.iter
 }
 
@@ -59,14 +60,9 @@ func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
 		sdk.Logger(ctx).Info().Msg("Data is coming nil")
 		i.iter = false
 		return sdk.Record{
-			Metadata: map[string]string{
-				"SpreadsheetId": i.spreadsheetId,
-				"SheetId":       "0",
-				"dimension":     sheetData.s.MajorDimension,
-			},
 			Position:  []byte(fmt.Sprint(sheetData.rowCount)),
 			CreatedAt: time.Now(),
-		}, nil
+		}, err
 	}
 
 	rawData, err := json.Marshal(sheetData.s.Values)
@@ -110,7 +106,7 @@ func fetchSheetData(ctx context.Context, srv *sheets.Service, spreadsheetId stri
 	s.GridRange = &sheets.GridRange{
 		SheetId:       0,
 		StartRowIndex: offset,
-		EndRowIndex:   offset + 10,
+		// EndRowIndex:   offset + 10,
 	}
 
 	dataFilters = append(dataFilters, &s)
