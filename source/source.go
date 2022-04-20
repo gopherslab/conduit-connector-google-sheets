@@ -38,8 +38,8 @@ func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
 	}
 
 	s.configData = config.Config{
-		GoogleSpreadsheetId:   config2.GoogleSpreadsheetId,
-		GoogleSpreadsheetName: config2.GoogleSpreadsheetName,
+		GoogleSpreadsheetId: config2.GoogleSpreadsheetId,
+		GoogleSheetID:       config2.GoogleSheetID,
 	}
 
 	token := &oauth2.Token{
@@ -59,9 +59,7 @@ func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
 	if err != nil {
 		return fmt.Errorf("couldn't parse position: %w", err)
 	}
-	// var err error
-	sdk.Logger(ctx).Info().Msg("Last Position Value in Open: " + string(rp))
-
+	
 	s.iterator, err = iterator.NewCDCIterator(ctx, s.client, s.configData, record)
 	if err != nil {
 		return fmt.Errorf("couldn't create a iterator: %w", err)
@@ -73,11 +71,9 @@ func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
 // Read gets the next object
 func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
 	if !s.iterator.HasNext(ctx) {
-		sdk.Logger(ctx).Info().Msg("This is in hasnext error block")
 		return sdk.Record{}, sdk.ErrBackoffRetry
 	}
 
-	sdk.Logger(ctx).Info().Msg("This is entering in next")
 	r, err := s.iterator.Next(ctx)
 	if err != nil {
 		return sdk.Record{}, err
@@ -86,7 +82,6 @@ func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
 }
 
 func (s *Source) Teardown(ctx context.Context) error {
-	sdk.Logger(ctx).Info().Msg("This is entering in stop")
 	if s.iterator != nil {
 		s.iterator = nil
 	}
@@ -95,6 +90,5 @@ func (s *Source) Teardown(ctx context.Context) error {
 }
 
 func (s *Source) Ack(ctx context.Context, position sdk.Position) error {
-	sdk.Logger(ctx).Info().Msg("This is ack")
 	return nil
 }

@@ -44,10 +44,10 @@ func Specification() sdk.Specification {
 				Required:    true,
 				Description: "Google sheet id to fetch the records",
 			},
-			config.ConfigKeySpreadsheetName: {
+			config.ConfigKeySheetID: {
 				Default:     "",
 				Required:    true,
-				Description: "Google Sheet Name to fetch the records from a single SpreadsheetId",
+				Description: "Google SheetID to fetch the records from a particular SpreadsheetId",
 			},
 		},
 	}

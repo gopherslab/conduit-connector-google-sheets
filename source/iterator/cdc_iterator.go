@@ -20,11 +20,10 @@ type Object struct {
 }
 
 type CDCIterator struct {
-	service         *sheets.Service
-	client          *http.Client
-	spreadsheetId   string
-	spreadsheetName string
-	rp              position.SheetPosition
+	service *sheets.Service
+	client  *http.Client
+	cfg     config.Config
+	rp      position.SheetPosition
 }
 
 func NewCDCIterator(ctx context.Context, client *http.Client, cfg config.Config, pos position.SheetPosition) (*CDCIterator, error) {
@@ -35,11 +34,10 @@ func NewCDCIterator(ctx context.Context, client *http.Client, cfg config.Config,
 	}
 
 	c := &CDCIterator{
-		service:         srv,
-		client:          client,
-		spreadsheetId:   cfg.GoogleSpreadsheetId,
-		spreadsheetName: cfg.GoogleSpreadsheetName,
-		rp:              pos,
+		service: srv,
+		client:  client,
+		cfg:     cfg,
+		rp:      pos,
 	}
 
 	return c, nil
@@ -51,20 +49,19 @@ func (i *CDCIterator) HasNext(ctx context.Context) bool {
 
 func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
 	// read object
-	sheetData, err := fetchSheetData(ctx, i.service, i.spreadsheetId, i.rp.RowOffset)
+	sheetData, err := fetchSheetData(ctx, i.service, i.cfg, i.rp.RowOffset)
 	if err != nil {
 		return sdk.Record{}, err
 	}
 
 	lastRow := position.SheetPosition{
-		SheetName: i.spreadsheetName,
 		RowOffset: sheetData.rowCount,
 		NextRun:   time.Now().Unix(),
 	}
 
 	if sheetData.s.Values == nil {
 		i.rp.NextRun = time.Now().Add(3 * time.Minute).Unix()
-		// i.iter = false
+
 		return sdk.Record{}, sdk.ErrBackoffRetry
 	}
 
@@ -76,8 +73,8 @@ func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
 	// create the record
 	output := sdk.Record{
 		Metadata: map[string]string{
-			"SpreadsheetId": i.spreadsheetId,
-			"SheetId":       "0",
+			"SpreadsheetId": i.cfg.GoogleSpreadsheetId,
+			"SheetId":       fmt.Sprintf("%d", i.cfg.GoogleSheetID),
 			"dimension":     sheetData.s.MajorDimension,
 		},
 		Position:  lastRow.RecordPosition(),
@@ -85,24 +82,20 @@ func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
 		CreatedAt: time.Now(),
 	}
 
-	sdk.Logger(ctx).Info().Msg(fmt.Sprintf("Data: %s", output))
 	i.rp.RowOffset = sheetData.rowCount
-	// i.iter = true
 	return output, nil
 }
 
 func (i *CDCIterator) Stop() {
-	// if !i.iter {
-	// 	return
-	// }
+	// nothing to do here
 }
 
-func fetchSheetData(ctx context.Context, srv *sheets.Service, spreadsheetId string, offset int64) (*Object, error) {
+func fetchSheetData(ctx context.Context, srv *sheets.Service, gsheet config.Config, offset int64) (*Object, error) {
 	var s sheets.DataFilter
 	dataFilters := []*sheets.DataFilter{}
 
 	s.GridRange = &sheets.GridRange{
-		// SheetId:       0,
+		SheetId:       gsheet.GoogleSheetID,
 		StartRowIndex: offset,
 	}
 
@@ -115,7 +108,7 @@ func fetchSheetData(ctx context.Context, srv *sheets.Service, spreadsheetId stri
 		DateTimeRenderOption: dateTimeRenderOption,
 	}
 
-	res, err := srv.Spreadsheets.Values.BatchGetByDataFilter(spreadsheetId, rbt).Context(ctx).Do()
+	res, err := srv.Spreadsheets.Values.BatchGetByDataFilter(gsheet.GoogleSpreadsheetId, rbt).Context(ctx).Do()
 	if err != nil {
 		return nil, err
 	}

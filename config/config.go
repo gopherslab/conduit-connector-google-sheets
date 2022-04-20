@@ -16,20 +16,21 @@ package config
 
 import (
 	"fmt"
+	"strconv"
 )
 
 const (
 	ConfigKeyGoogleAccessToken   = "access_token"
 	ConfigKeyRefreshToken        = "refresh_token"
-	ConfigKeySpreadsheetName     = "spreadsheet_name"
+	ConfigKeySheetID             = "sheet_id"
 	ConfigKeyGoogleSpreadsheetId = "spreadsheet_id"
 )
 
 type Config struct {
-	GoogleAccessToken     string
-	AuthRefreshToken      string
-	GoogleSpreadsheetId   string
-	GoogleSpreadsheetName string
+	GoogleAccessToken   string
+	AuthRefreshToken    string
+	GoogleSpreadsheetId string
+	GoogleSheetID       int64
 }
 
 func Parse(config map[string]string) (Config, error) {
@@ -48,16 +49,22 @@ func Parse(config map[string]string) (Config, error) {
 		return Config{}, requiredConfigErr(ConfigKeyGoogleSpreadsheetId)
 	}
 
-	spreadsheetName, ok := config[ConfigKeySpreadsheetName]
-	if !ok || spreadsheetName == "" {
-		return Config{}, requiredConfigErr(ConfigKeySpreadsheetName)
+	gSheetID, ok := config[ConfigKeySheetID]
+	if !ok || gSheetID == "" {
+		return Config{}, requiredConfigErr(ConfigKeySheetID)
+	}
+
+	sheetID, err := strconv.ParseInt(gSheetID, 10, 64)
+	
+	if err != nil {
+		return Config{}, fmt.Errorf("%q cannot parse sheetID from string to int64", ConfigKeySheetID)
 	}
 
 	cfg := Config{
-		GoogleAccessToken:     accessToken,
-		AuthRefreshToken:      refreshToken,
-		GoogleSpreadsheetId:   spreadsheetId,
-		GoogleSpreadsheetName: spreadsheetName,
+		GoogleAccessToken:   accessToken,
+		AuthRefreshToken:    refreshToken,
+		GoogleSpreadsheetId: spreadsheetId,
+		GoogleSheetID:       sheetID,
 	}
 
 	return cfg, nil

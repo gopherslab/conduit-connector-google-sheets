@@ -8,7 +8,6 @@ import (
 )
 
 type SheetPosition struct {
-	SheetName string `json:"sheet_name"`
 	RowOffset int64  `json:"row_offset"`
 	NextRun   int64  `json:"next_run"`
 }
