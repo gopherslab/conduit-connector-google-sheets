@@ -38,18 +38,18 @@ func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
 	}
 
 	s.configData = config.Config{
-		GoogleSpreadsheetId: config2.GoogleSpreadsheetId,
-		// GoogleSpreadsheetName: config2.GoogleSpreadsheetName,
+		GoogleSpreadsheetId:   config2.GoogleSpreadsheetId,
+		GoogleSpreadsheetName: config2.GoogleSpreadsheetName,
 	}
 
 	token := &oauth2.Token{
-		AccessToken: config2.GoogleAccessToken,
-		TokenType:   "Bearer",
+		AccessToken:  config2.GoogleAccessToken,
+		TokenType:    "Bearer",
+		RefreshToken: config2.AuthRefreshToken,
 	}
 
 	var authCfg *oauth2.Config
-	s.client = authCfg.Client(ctx, token)
-
+	s.client = authCfg.Client(context.Background(), token)
 	return nil
 }
 

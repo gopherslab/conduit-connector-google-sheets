@@ -20,12 +20,14 @@ import (
 
 const (
 	ConfigKeyGoogleAccessToken   = "access_token"
+	ConfigKeyRefreshToken        = "refresh_token"
 	ConfigKeySpreadsheetName     = "spreadsheet_name"
 	ConfigKeyGoogleSpreadsheetId = "spreadsheet_id"
 )
 
 type Config struct {
 	GoogleAccessToken     string
+	AuthRefreshToken      string
 	GoogleSpreadsheetId   string
 	GoogleSpreadsheetName string
 }
@@ -34,6 +36,11 @@ func Parse(config map[string]string) (Config, error) {
 	accessToken, ok := config[ConfigKeyGoogleAccessToken]
 	if !ok || accessToken == "" {
 		return Config{}, requiredConfigErr(ConfigKeyGoogleAccessToken)
+	}
+
+	refreshToken, ok := config[ConfigKeyRefreshToken]
+	if !ok || refreshToken == "" {
+		return Config{}, requiredConfigErr(ConfigKeyRefreshToken)
 	}
 
 	spreadsheetId, ok := config[ConfigKeyGoogleSpreadsheetId]
@@ -48,6 +55,7 @@ func Parse(config map[string]string) (Config, error) {
 
 	cfg := Config{
 		GoogleAccessToken:     accessToken,
+		AuthRefreshToken:      refreshToken,
 		GoogleSpreadsheetId:   spreadsheetId,
 		GoogleSpreadsheetName: spreadsheetName,
 	}
