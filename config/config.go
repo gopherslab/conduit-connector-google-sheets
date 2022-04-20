@@ -19,19 +19,15 @@ import (
 )
 
 const (
-	ConfigKeyGoogleAccessToken = "access_token"
-	// ConfigKeyRefreshToken            = "refresh_token"
-	// ConfigKeyGoogleAccessTokenExpiry = "expiry"
-	ConfigKeyGoogleSpreadsheetId    = "spreadsheet_id"
-	ConfigKeyGoogleSpreadsheetRange = "range"
+	ConfigKeyGoogleAccessToken   = "access_token"
+	ConfigKeySpreadsheetName     = "spreadsheet_name"
+	ConfigKeyGoogleSpreadsheetId = "spreadsheet_id"
 )
 
 type Config struct {
-	GoogleAccessToken string
-	// RefreshToken            string
-	// GoogleAccessTokenExpiry time.Time
-	GoogleSpreadsheetId    string
-	// GoogleSpreadsheetRange string
+	GoogleAccessToken     string
+	GoogleSpreadsheetId   string
+	GoogleSpreadsheetName string
 }
 
 func Parse(config map[string]string) (Config, error) {
@@ -40,34 +36,20 @@ func Parse(config map[string]string) (Config, error) {
 		return Config{}, requiredConfigErr(ConfigKeyGoogleAccessToken)
 	}
 
-	// refreshToken, ok := config[ConfigKeyGoogleAccessToken]
-	// if !ok || accessToken == "" {
-	// 	return Config{}, requiredConfigErr(ConfigKeyGoogleAccessToken)
-	// }
-
-	// var tokenExpiry time.Time
-	// if expiry, ok := config[ConfigKeyGoogleAccessToken]; ok {
-	// 	e, err := time.Parse("DD-MM-YYYY", expiry)
-	// 	if err != nil {
-	// 		log.Printf("%v", err)
-	// 	}
-	// 	tokenExpiry = e
-	// }
-
 	spreadsheetId, ok := config[ConfigKeyGoogleSpreadsheetId]
 	if !ok || spreadsheetId == "" {
 		return Config{}, requiredConfigErr(ConfigKeyGoogleSpreadsheetId)
 	}
 
-	// sheetRange, ok := config[ConfigKeyGoogleSpreadsheetRange]
-	// if !ok || sheetRange == "" {
-	// 	return Config{}, requiredConfigErr(ConfigKeyGoogleSpreadsheetRange)
-	// }
+	spreadsheetName, ok := config[ConfigKeySpreadsheetName]
+	if !ok || spreadsheetName == "" {
+		return Config{}, requiredConfigErr(ConfigKeySpreadsheetName)
+	}
 
 	cfg := Config{
-		GoogleAccessToken: accessToken,
-		GoogleSpreadsheetId:    spreadsheetId,
-		// GoogleSpreadsheetRange: sheetRange,
+		GoogleAccessToken:     accessToken,
+		GoogleSpreadsheetId:   spreadsheetId,
+		GoogleSpreadsheetName: spreadsheetName,
 	}
 
 	return cfg, nil

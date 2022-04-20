@@ -1,35 +1,40 @@
 package position
 
 import (
+	"encoding/json"
 	"fmt"
-	"strconv"
-	"time"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
-type Position struct {
-	Key       int64
-	Timestamp time.Time
+type SheetPosition struct {
+	SheetName string `json:"sheet_name"`
+	RowOffset int64  `json:"row_offset"`
+	NextRun   int64  `json:"next_run"`
 }
 
-func ParseRecordPosition(p sdk.Position) (Position, error) {
-	s := string(p)
-	var err error
-	if s == "" {
-		return Position{
-			Key:       0,
-			Timestamp: time.Unix(0, 0),
-		}, err
+func ParseRecordPosition(p sdk.Position) (SheetPosition, error) {
+	var (
+		err            error
+		recordPosition SheetPosition
+	)
+
+	if p == nil {
+		return SheetPosition{}, err
 	}
 
-	page, err := strconv.Atoi(s)
+	err = json.Unmarshal(p, &recordPosition)
 	if err != nil {
-		return Position{}, fmt.Errorf("could not parse the position timestamp: %w", err)
+		return SheetPosition{}, fmt.Errorf("could not parse the position timestamp: %w", err)
 	}
 
-	return Position{
-		Key:       int64(page),
-		Timestamp: time.Unix(0, 0),
-	}, err
+	return recordPosition, err
+}
+
+func (s SheetPosition) RecordPosition() sdk.Position {
+	pos, err := json.Marshal(s)
+	if err != nil {
+		return sdk.Position{}
+	}
+	return pos
 }

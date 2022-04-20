@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/conduitio/conduit-connector-google-sheets/config"
+	"github.com/conduitio/conduit-connector-google-sheets/source/position"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
@@ -18,14 +20,14 @@ type Object struct {
 }
 
 type CDCIterator struct {
-	service       *sheets.Service
-	client        *http.Client
-	spreadsheetId string
-	iter          bool
-	endPage       int64
+	service         *sheets.Service
+	client          *http.Client
+	spreadsheetId   string
+	spreadsheetName string
+	rp              position.SheetPosition
 }
 
-func NewCDCIterator(ctx context.Context, client *http.Client, spreadsheetId string, p int64) (*CDCIterator, error) {
+func NewCDCIterator(ctx context.Context, client *http.Client, cfg config.Config, pos position.SheetPosition) (*CDCIterator, error) {
 	var err error
 	srv, err := sheets.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
@@ -33,36 +35,37 @@ func NewCDCIterator(ctx context.Context, client *http.Client, spreadsheetId stri
 	}
 
 	c := &CDCIterator{
-		service:       srv,
-		client:        client,
-		spreadsheetId: spreadsheetId,
-		endPage:       p,
+		service:         srv,
+		client:          client,
+		spreadsheetId:   cfg.GoogleSpreadsheetId,
+		spreadsheetName: cfg.GoogleSpreadsheetName,
+		rp:              pos,
 	}
 
 	return c, nil
 }
 
 func (i *CDCIterator) HasNext(ctx context.Context) bool {
-	sdk.Logger(ctx).Info().Msg("This is HasNext")
-	return i.endPage > 0 || !i.iter
+	return i.rp.RowOffset == 0 || fmt.Sprintf("%d", time.Now().Unix()) > fmt.Sprintf("%d", i.rp.NextRun) //i.rp.NextRun > time.Time{} //!i.iter
 }
 
 func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
-	sdk.Logger(ctx).Info().Msg("This is next function")
-
 	// read object
-	sheetData, err := fetchSheetData(ctx, i.service, i.spreadsheetId, i.endPage)
+	sheetData, err := fetchSheetData(ctx, i.service, i.spreadsheetId, i.rp.RowOffset)
 	if err != nil {
 		return sdk.Record{}, err
 	}
 
+	lastRow := position.SheetPosition{
+		SheetName: i.spreadsheetName,
+		RowOffset: sheetData.rowCount,
+		NextRun:   time.Now().Unix(),
+	}
+
 	if sheetData.s.Values == nil {
-		sdk.Logger(ctx).Info().Msg("Data is coming nil")
-		i.iter = false
-		return sdk.Record{
-			Position:  []byte(fmt.Sprint(sheetData.rowCount)),
-			CreatedAt: time.Now(),
-		}, err
+		i.rp.NextRun = time.Now().Add(3 * time.Minute).Unix()
+		// i.iter = false
+		return sdk.Record{}, sdk.ErrBackoffRetry
 	}
 
 	rawData, err := json.Marshal(sheetData.s.Values)
@@ -77,23 +80,21 @@ func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
 			"SheetId":       "0",
 			"dimension":     sheetData.s.MajorDimension,
 		},
-		Position:  []byte(fmt.Sprintf("%d", sheetData.rowCount)), //ToRecordPosition
+		Position:  lastRow.RecordPosition(),
 		Payload:   sdk.RawData(rawData),
 		CreatedAt: time.Now(),
 	}
 
 	sdk.Logger(ctx).Info().Msg(fmt.Sprintf("Data: %s", output))
-	i.endPage = sheetData.rowCount
-	i.iter = true
+	i.rp.RowOffset = sheetData.rowCount
+	// i.iter = true
 	return output, nil
 }
 
 func (i *CDCIterator) Stop() {
-	sdk.Logger(context.TODO()).Info().Msg("Hey this is inside the stop function")
-	if !i.iter {
-		sdk.Logger(context.TODO()).Info().Msg("Getting inside if statement of the stop function")
-		return
-	}
+	// if !i.iter {
+	// 	return
+	// }
 }
 
 func fetchSheetData(ctx context.Context, srv *sheets.Service, spreadsheetId string, offset int64) (*Object, error) {
@@ -101,7 +102,7 @@ func fetchSheetData(ctx context.Context, srv *sheets.Service, spreadsheetId stri
 	dataFilters := []*sheets.DataFilter{}
 
 	s.GridRange = &sheets.GridRange{
-		SheetId:       0,
+		// SheetId:       0,
 		StartRowIndex: offset,
 	}
 
@@ -122,7 +123,7 @@ func fetchSheetData(ctx context.Context, srv *sheets.Service, spreadsheetId stri
 	if res == nil {
 		return &Object{
 			s:        nil,
-			rowCount: offset + 0,
+			rowCount: offset,
 		}, nil
 	}
 

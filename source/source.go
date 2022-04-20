@@ -37,7 +37,10 @@ func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
 		return err
 	}
 
-	s.configData = config.Config{GoogleSpreadsheetId: config2.GoogleSpreadsheetId}
+	s.configData = config.Config{
+		GoogleSpreadsheetId: config2.GoogleSpreadsheetId,
+		// GoogleSpreadsheetName: config2.GoogleSpreadsheetName,
+	}
 
 	token := &oauth2.Token{
 		AccessToken: config2.GoogleAccessToken,
@@ -52,14 +55,14 @@ func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
 
 // Open prepare the plugin to start sending records from the given position
 func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
-	p, err := position.ParseRecordPosition(rp)
+	record, err := position.ParseRecordPosition(rp)
 	if err != nil {
 		return fmt.Errorf("couldn't parse position: %w", err)
 	}
 	// var err error
 	sdk.Logger(ctx).Info().Msg("Last Position Value in Open: " + string(rp))
 
-	s.iterator, err = iterator.NewCDCIterator(ctx, s.client, s.configData.GoogleSpreadsheetId, p.Key)
+	s.iterator, err = iterator.NewCDCIterator(ctx, s.client, s.configData, record)
 	if err != nil {
 		return fmt.Errorf("couldn't create a iterator: %w", err)
 	}
@@ -85,8 +88,6 @@ func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
 func (s *Source) Teardown(ctx context.Context) error {
 	sdk.Logger(ctx).Info().Msg("This is entering in stop")
 	if s.iterator != nil {
-		// s.iterator.Stop()
-		// s.client = nil
 		s.iterator = nil
 	}
 
@@ -95,7 +96,5 @@ func (s *Source) Teardown(ctx context.Context) error {
 
 func (s *Source) Ack(ctx context.Context, position sdk.Position) error {
 	sdk.Logger(ctx).Info().Msg("This is ack")
-	// sdk.Logger(ctx).Info().Msg(fmt.Sprintf("Position: %s", string(position)))
-
 	return nil
 }
