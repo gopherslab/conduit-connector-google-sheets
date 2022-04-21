@@ -55,7 +55,6 @@ func Parse(config map[string]string) (Config, error) {
 	}
 
 	sheetID, err := strconv.ParseInt(gSheetID, 10, 64)
-	
 	if err != nil {
 		return Config{}, fmt.Errorf("%q cannot parse sheetID from string to int64", ConfigKeySheetID)
 	}

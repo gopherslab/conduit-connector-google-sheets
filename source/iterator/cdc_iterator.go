@@ -113,7 +113,7 @@ func fetchSheetData(ctx context.Context, srv *sheets.Service, gsheet config.Conf
 		return nil, err
 	}
 
-	if res == nil {
+	if res == nil || (res.HTTPStatusCode != http.StatusOK) {
 		return &Object{
 			s:        nil,
 			rowCount: offset,
