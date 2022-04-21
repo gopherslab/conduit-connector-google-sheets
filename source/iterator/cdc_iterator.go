@@ -44,7 +44,7 @@ func NewCDCIterator(ctx context.Context, client *http.Client, cfg config.Config,
 }
 
 func (i *CDCIterator) HasNext(ctx context.Context) bool {
-	return i.rp.RowOffset == 0 || fmt.Sprintf("%d", time.Now().Unix()) > fmt.Sprintf("%d", i.rp.NextRun) //i.rp.NextRun > time.Time{} //!i.iter
+	return i.rp.RowOffset == 0 || fmt.Sprintf("%d", time.Now().Unix()) > fmt.Sprintf("%d", i.rp.NextRun)
 }
 
 func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
@@ -60,8 +60,7 @@ func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
 	}
 
 	if sheetData.s.Values == nil {
-		i.rp.NextRun = time.Now().Add(3 * time.Minute).Unix()
-
+		i.rp.NextRun = time.Now().Add(time.Duration(i.cfg.IterationInterval) * time.Minute).Unix()
 		return sdk.Record{}, sdk.ErrBackoffRetry
 	}
 
@@ -113,7 +112,7 @@ func fetchSheetData(ctx context.Context, srv *sheets.Service, gsheet config.Conf
 		return nil, err
 	}
 
-	if res == nil || (res.HTTPStatusCode != http.StatusOK) {
+	if (res.HTTPStatusCode != http.StatusOK) || res == nil {
 		return &Object{
 			s:        nil,
 			rowCount: offset,

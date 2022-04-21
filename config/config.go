@@ -24,6 +24,8 @@ const (
 	ConfigKeyRefreshToken        = "refresh_token"
 	ConfigKeySheetID             = "sheet_id"
 	ConfigKeyGoogleSpreadsheetId = "spreadsheet_id"
+	NextIterationTimeInterval    = "time_interval"
+	DefualtTimeInterval          = 3
 )
 
 type Config struct {
@@ -31,6 +33,7 @@ type Config struct {
 	AuthRefreshToken    string
 	GoogleSpreadsheetId string
 	GoogleSheetID       int64
+	IterationInterval   int64
 }
 
 func Parse(config map[string]string) (Config, error) {
@@ -54,9 +57,20 @@ func Parse(config map[string]string) (Config, error) {
 		return Config{}, requiredConfigErr(ConfigKeySheetID)
 	}
 
-	sheetID, err := strconv.ParseInt(gSheetID, 10, 64)
+	sheetID, err := convertToInt64(gSheetID) //strconv.ParseInt(gSheetID, 10, 64)
 	if err != nil {
 		return Config{}, fmt.Errorf("%q cannot parse sheetID from string to int64", ConfigKeySheetID)
+	}
+
+	interval, ok := config[NextIterationTimeInterval]
+	if !ok {
+		return Config{}, requiredConfigErr(NextIterationTimeInterval)
+	}
+
+	// Time interval being an optional value
+	timeInterval, err := convertToInt64(interval)
+	if err != nil {
+		timeInterval = DefualtTimeInterval
 	}
 
 	cfg := Config{
@@ -64,9 +78,19 @@ func Parse(config map[string]string) (Config, error) {
 		AuthRefreshToken:    refreshToken,
 		GoogleSpreadsheetId: spreadsheetId,
 		GoogleSheetID:       sheetID,
+		IterationInterval:   timeInterval,
 	}
 
 	return cfg, nil
+}
+
+func convertToInt64(value string) (int64, error) {
+	parsed, err := strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		return -1, fmt.Errorf("%s cannot parse value from string to int64", value)
+	}
+
+	return parsed, err
 }
 
 func requiredConfigErr(name string) error {
