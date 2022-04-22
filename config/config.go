@@ -17,6 +17,7 @@ package config
 import (
 	"fmt"
 	"strconv"
+	"time"
 )
 
 const (
@@ -24,8 +25,8 @@ const (
 	ConfigKeyRefreshToken        = "refresh_token"
 	ConfigKeySheetID             = "sheet_id"
 	ConfigKeyGoogleSpreadsheetId = "spreadsheet_id"
-	NextIterationTimeInterval    = "time_interval"
-	DefualtTimeInterval          = 3
+	ConfigKeyIterationInterval   = "iteration_interval"
+	DefualtTimeInterval          = "3m"
 )
 
 type Config struct {
@@ -33,7 +34,7 @@ type Config struct {
 	AuthRefreshToken    string
 	GoogleSpreadsheetId string
 	GoogleSheetID       int64
-	IterationInterval   int64
+	IterationInterval   time.Duration
 }
 
 func Parse(config map[string]string) (Config, error) {
@@ -57,20 +58,20 @@ func Parse(config map[string]string) (Config, error) {
 		return Config{}, requiredConfigErr(ConfigKeySheetID)
 	}
 
-	sheetID, err := convertToInt64(gSheetID) //strconv.ParseInt(gSheetID, 10, 64)
+	sheetID, err := convertToInt64(gSheetID)
 	if err != nil {
 		return Config{}, fmt.Errorf("%q cannot parse sheetID from string to int64", ConfigKeySheetID)
 	}
 
-	interval, ok := config[NextIterationTimeInterval]
-	if !ok {
-		return Config{}, requiredConfigErr(NextIterationTimeInterval)
+	// Time interval being an optional value
+	interval := config[ConfigKeyIterationInterval]
+	if interval == ""{
+		interval = DefualtTimeInterval
 	}
 
-	// Time interval being an optional value
-	timeInterval, err := convertToInt64(interval)
+	timeInterval, err := time.ParseDuration(interval)
 	if err != nil {
-		timeInterval = DefualtTimeInterval
+		return Config{}, fmt.Errorf("%q cannot parse interval to time duration", interval)
 	}
 
 	cfg := Config{

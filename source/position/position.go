@@ -3,13 +3,14 @@ package position
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
 type SheetPosition struct {
-	RowOffset int64  `json:"row_offset"`
-	NextRun   int64  `json:"next_run"`
+	RowOffset int64     `json:"row_offset"`
+	NextRun   time.Time `json:"next_run"`
 }
 
 func ParseRecordPosition(p sdk.Position) (SheetPosition, error) {

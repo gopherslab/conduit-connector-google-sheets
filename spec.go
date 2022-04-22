@@ -49,10 +49,10 @@ func Specification() sdk.Specification {
 				Required:    true,
 				Description: "Google SheetID to fetch the records from a particular SpreadsheetId",
 			},
-			config.NextIterationTimeInterval: {
-				Default:     "",
+			config.ConfigKeyIterationInterval: {
+				Default:     "3m",
 				Required:    false,
-				Description: "Google SheetID to fetch the records from a particular SpreadsheetId",
+				Description: "Time interval for consecutive fetching data.",
 			},
 		},
 	}

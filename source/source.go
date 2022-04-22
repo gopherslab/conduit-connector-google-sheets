@@ -32,20 +32,20 @@ func NewSource() sdk.Source {
 }
 
 func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
-	config2, err := config.Parse(cfg)
+	sheetsConfig, err := config.Parse(cfg)
 	if err != nil {
 		return err
 	}
 
 	s.configData = config.Config{
-		GoogleSpreadsheetId: config2.GoogleSpreadsheetId,
-		GoogleSheetID:       config2.GoogleSheetID,
+		GoogleSpreadsheetId: sheetsConfig.GoogleSpreadsheetId,
+		GoogleSheetID:       sheetsConfig.GoogleSheetID,
 	}
 
 	token := &oauth2.Token{
-		AccessToken:  config2.GoogleAccessToken,
+		AccessToken:  sheetsConfig.GoogleAccessToken,
 		TokenType:    "Bearer",
-		RefreshToken: config2.AuthRefreshToken,
+		RefreshToken: sheetsConfig.AuthRefreshToken,
 	}
 
 	var authCfg *oauth2.Config
