@@ -40,6 +40,7 @@ func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
 	s.configData = config.Config{
 		GoogleSpreadsheetId: sheetsConfig.GoogleSpreadsheetId,
 		GoogleSheetID:       sheetsConfig.GoogleSheetID,
+		IterationInterval:   sheetsConfig.IterationInterval,
 	}
 
 	token := &oauth2.Token{
@@ -59,7 +60,7 @@ func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
 	if err != nil {
 		return fmt.Errorf("couldn't parse position: %w", err)
 	}
-	
+
 	s.iterator, err = iterator.NewCDCIterator(ctx, s.client, s.configData, record)
 	if err != nil {
 		return fmt.Errorf("couldn't create a iterator: %w", err)
