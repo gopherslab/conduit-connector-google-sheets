@@ -14,31 +14,93 @@
 
 package config
 
-type testCase struct {
-	token           string
-	refreshToken    string
-	spreadsheetID   string
-	spreadsheetName string
-	want            error
+import (
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+)
+
+type testCase []struct {
+	testCase string
+	params   map[string]string
+	expected Config
 }
 
-// func TestParse(t *testing.T) {
-// 	var e error
-// 	cases := []testCase{
-// 		{"", "", e},
-// 		{"token", "", e},
-// 		{"", "sheetId", e},
-// 		{"token", "sheetsId", nil},
-// 	}
+func TestParse(t *testing.T) {
+	cases := testCase{
+		{
+			testCase: "Checking against default values",
+			params: map[string]string{
+				"access_token":       "",
+				"refresh_token":      "",
+				"spreadsheet_id":     "",
+				"sheet_id":           "",
+				"iteration_interval": "2m",
+			},
+			expected: Config{
+				GoogleAccessToken:   "",
+				AuthRefreshToken:    "",
+				GoogleSpreadsheetId: "",
+				GoogleSheetID:       2,
+				IterationInterval:   time.Duration(120000000000),
+			},
+		},
+		{
+			testCase: "Checking against if any required value is empty",
+			params: map[string]string{
+				"access_token":       "",
+				"refresh_token":      "",
+				"spreadsheet_id":     "",
+				"sheet_id":           "-1",
+				"iteration_interval": "2m",
+			},
+			expected: Config{
+				GoogleAccessToken:   "",
+				AuthRefreshToken:    "",
+				GoogleSpreadsheetId: "",
+				GoogleSheetID:       -1,
+				IterationInterval:   time.Duration(120000000000),
+			},
+		},
+		{
+			testCase: "Checking against random values case",
+			params: map[string]string{
+				"access_token":       "asdfghjkl",
+				"refresh_token":      "qweafdfv",
+				"spreadsheet_id":     "",
+				"sheet_id":           "365",
+				"iteration_interval": "2m",
+			},
+			expected: Config{
+				GoogleAccessToken:   "asdfghjkl",
+				AuthRefreshToken:    "qweafdfv",
+				GoogleSpreadsheetId: "",
+				GoogleSheetID:       365,
+				IterationInterval:   time.Duration(120000000000),
+			},
+		},
+		{
+			testCase: "Checking for IDEAL case",
+			params: map[string]string{
+				"access_token":       "access-token here",
+				"refresh_token":      "refresh-token here",
+				"spreadsheet_id":     "123abcd",
+				"sheet_id":           "12",
+				"iteration_interval": "2m",
+			},
+			expected: Config{
+				GoogleAccessToken:   "access-token here",
+				AuthRefreshToken:    "refresh-token here",
+				GoogleSpreadsheetId: "123abcd",
+				GoogleSheetID:       12,
+				IterationInterval:   time.Duration(120000000000),
+			},
+		},
+	}
 
-// 	for _, tc := range cases {
-// 		result, err := Parse(map[string]string{
-// 			"access_token":   tc.token,
-// 			"spreadsheet_id": tc.spedID,
-// 		})
-
-// 		if tc.want != err {
-// 			t.Errorf("Expected '%s', but got '%s'", tc.want, result)
-// 		}
-// 	}
-// }
+	for _, tc := range cases {
+		cfg, _ := Parse(tc.params)
+		assert.Equal(t, tc.expected, cfg)
+	}
+}

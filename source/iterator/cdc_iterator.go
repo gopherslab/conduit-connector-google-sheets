@@ -45,10 +45,11 @@ func NewCDCIterator(ctx context.Context, client *http.Client, cfg config.Config,
 
 func (i *CDCIterator) HasNext(ctx context.Context) bool {
 	return time.Now().After(i.rp.NextRun)
-	// return i.rp.RowOffset == 0 || fmt.Sprintf("%d", time.Now().Unix()) > fmt.Sprintf("%d", i.rp.NextRun)
 }
 
 func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
+	sdk.Logger(ctx).Info().Msg(fmt.Sprintf("API hit at: %v", i.rp.NextRun))
+
 	// read object
 	sheetData, err := fetchSheetData(ctx, i.service, i.cfg, i.rp.RowOffset)
 	if err != nil {
@@ -62,6 +63,8 @@ func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
 
 	if sheetData.sheetData.Values == nil {
 		i.rp.NextRun = time.Now().Add(i.cfg.IterationInterval)
+		sdk.Logger(ctx).Info().Msg(fmt.Sprintf("The next API will hit after: %v", i.rp.NextRun))
+
 		return sdk.Record{
 			Position: lastRowPosition.RecordPosition(),
 		}, sdk.ErrBackoffRetry
