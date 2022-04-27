@@ -123,7 +123,7 @@ func fetchSheetData(ctx context.Context, srv *sheets.Service, gsheet config.Conf
 
 	if (res.HTTPStatusCode != http.StatusOK) || res == nil {
 		return &Object{
-			sheetDimension: res.ValueRanges[0].ValueRange.MajorDimension,
+			sheetDimension: valueRange.MajorDimension,
 			sheetRecords:   nil,
 			rowCount:       offset,
 		}, nil
@@ -131,10 +131,7 @@ func fetchSheetData(ctx context.Context, srv *sheets.Service, gsheet config.Conf
 
 	responseData := valueRange.Values
 	for index, value := range responseData {
-		fmt.Println("Value inside of responseData: ", value)
-
 		if len(value) == 0 {
-			fmt.Println("Value is coming nil")
 			responseData = responseData[:index]
 			break
 		}
