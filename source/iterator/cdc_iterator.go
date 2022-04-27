@@ -15,8 +15,9 @@ import (
 )
 
 type Object struct {
-	sheetData *sheets.ValueRange
-	rowCount  int64
+	sheetDimension string
+	sheetRecords   [][]interface{}
+	rowCount       int64
 }
 
 type CDCIterator struct {
@@ -61,7 +62,7 @@ func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
 		NextRun:   time.Now(),
 	}
 
-	if sheetData.sheetData.Values == nil {
+	if len(sheetData.sheetRecords) == 0 {
 		i.rp.NextRun = time.Now().Add(i.cfg.IterationInterval)
 		sdk.Logger(ctx).Info().Msg(fmt.Sprintf("The next API will hit after: %v", i.rp.NextRun))
 
@@ -70,7 +71,7 @@ func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
 		}, sdk.ErrBackoffRetry
 	}
 
-	rawData, err := json.Marshal(sheetData.sheetData.Values)
+	rawData, err := json.Marshal(sheetData.sheetRecords)
 	if err != nil {
 		return sdk.Record{
 			Position: lastRowPosition.RecordPosition(),
@@ -82,7 +83,7 @@ func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
 		Metadata: map[string]string{
 			"SpreadsheetId": i.cfg.GoogleSpreadsheetId,
 			"SheetId":       fmt.Sprintf("%d", i.cfg.GoogleSheetID),
-			"dimension":     sheetData.sheetData.MajorDimension,
+			"dimension":     sheetData.sheetDimension,
 		},
 		Position:  lastRowPosition.RecordPosition(),
 		Payload:   sdk.RawData(rawData),
@@ -118,18 +119,32 @@ func fetchSheetData(ctx context.Context, srv *sheets.Service, gsheet config.Conf
 	if err != nil {
 		return nil, err
 	}
+	valueRange := res.ValueRanges[0].ValueRange
 
 	if (res.HTTPStatusCode != http.StatusOK) || res == nil {
 		return &Object{
-			sheetData: nil,
-			rowCount:  offset,
+			sheetDimension: res.ValueRanges[0].ValueRange.MajorDimension,
+			sheetRecords:   nil,
+			rowCount:       offset,
 		}, nil
 	}
 
-	count := offset + int64(len(res.ValueRanges[0].ValueRange.Values))
+	responseData := valueRange.Values
+	for index, value := range responseData {
+		fmt.Println("Value inside of responseData: ", value)
+
+		if len(value) == 0 {
+			fmt.Println("Value is coming nil")
+			responseData = responseData[:index]
+			break
+		}
+	}
+
+	count := offset + int64(len(responseData))
 	return &Object{
-		sheetData: res.ValueRanges[0].ValueRange,
-		rowCount:  count,
+		sheetDimension: valueRange.MajorDimension,
+		sheetRecords:   responseData,
+		rowCount:       count,
 	}, nil
 
 }
