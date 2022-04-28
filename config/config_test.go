@@ -100,7 +100,17 @@ func TestParse(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		cfg, _ := Parse(tc.params)
-		assert.Equal(t, tc.expected, cfg)
+		// cfg, err := Parse(tc.params)
+		
+		// assert.Equal(t, tc.expected, cfg)
+
+		t.Run(tc.testCase, func(t *testing.T) {
+			cfg, err := Parse(tc.params)
+			if err!= nil{
+				assert.NotNil(t, err)
+			}else{
+				assert.Equal(t, tc.expected, cfg)
+			}
+		})
 	}
 }
