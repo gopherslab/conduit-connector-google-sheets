@@ -22,7 +22,7 @@ If there are single/multiple empty rows in between the two records, it will fetc
 
 #### Position Handling
 
-The Google-sheet connector stores the the last row of the fetched sheet data as position. If in case, there are empty rows, google=sheet connector will fetch till the next row is empty and that last row will be stored as in position. 
+The Google-sheet connector stores the the last row of the fetched sheet data as position. If in case, there are empty rows, Google-Sheet connector will fetch till the next row is empty and that last row will be stored as in position. 
 
 
 ### Configuration
@@ -39,3 +39,6 @@ The config passed to `Configure` can contain the following fields.
 
 
 ### Known Limitations
+
+* At a time, only one `sheet_id` can be used to fetch the records from the google-sheet.
+* Any modification/update/delete made to a previous row(s) in google-sheet, after the records are fetched will not be visible in the next api hit.
