@@ -31,11 +31,11 @@ The config passed to `Configure` can contain the following fields.
 
 | name                  | description                                                                            | required  | example             |
 |-----------------------|----------------------------------------------------------------------------------------|-----------|---------------------|
-| `access_key`     |  Google Oauth2 Access Token id                                                                      | yes       | "ACCESS_TOKEN" |
-| `refresh_token` | Google Oauth2 Refresh Token key                                                                  | yes       | "REFRESH_TOKEN" |
-| `spreadsheet_id`          | Spreadsheet ID region                                                               | yes       | "us-east-1"         |
-| `sheet_id`          | Unique ID(integer value) for every sheet (i.e gid in the url)                                                                  | yes       | "bucket_name"       |
-| `iteration_interval`       | time interval between two consecutive hits. Can be in format as s for seconds, m for minutes, h for hours (for eg: 2s, 2m, 2h)  | no        | "2m"            |
+| `access_key`     |  Google Oauth2 Access Token                                                                    | yes       | "ACCESS_TOKEN" |
+| `refresh_token` | Google Oauth2 Refresh Token                                                                   | yes       | "REFRESH_TOKEN" |
+| `spreadsheet_id`          | Spreadsheet ID                                                                | yes       | "SPREADSHEET_ID"         |
+| `sheet_id`          | Unique ID(integer value) for every sheet (i.e gid in the url)                                                                  | yes       | 0       |
+| `iteration_interval`       | time interval between two consecutive hits. Can be in format as s for seconds, m for minutes, h for hours (for eg: 2s; 2m; 2h)  | no        | "2m"            |
 
 
 ### Known Limitations
