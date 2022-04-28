@@ -8,9 +8,7 @@ The Conduit Connector for [Google-Sheets](https://github.com/gopherslab/conduit-
 
 The Google-Sheet Connector connects to google sheets via google-sheets api(v4) witht the provided configuration using the OAuth2 credentials, SpreadsheetId and SheetId along with a configurable time interval for the next consecutive run. 
 
-The `Configure` method is called to parse the configurations. // what will happen if we provide wrong spreadsheetid and sheet id
-
-After which, the `Open` method is called to start the connection from the provided position.
+The `Configure` method is called to parse the configurations. After which, the `Open` method is called to start the connection from the provided position.
 
 
 ### Record Fetching
