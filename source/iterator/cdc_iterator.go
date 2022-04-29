@@ -11,7 +11,7 @@ import (
 	"github.com/conduitio/conduit-connector-google-sheets/source/position"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"google.golang.org/api/option"
-	"google.golang.org/api/sheets/v4"
+	sheets "google.golang.org/api/sheets/v4"
 )
 
 type Object struct {
