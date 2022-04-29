@@ -24,7 +24,7 @@ const (
 	ConfigKeyGoogleAccessToken   = "access_token"
 	ConfigKeyRefreshToken        = "refresh_token"
 	ConfigKeySheetID             = "sheet_id"
-	ConfigKeyGoogleSpreadsheetId = "spreadsheet_id"
+	ConfigKeyGoogleSpreadsheetID = "spreadsheet_id"
 	ConfigKeyIterationInterval   = "iteration_interval"
 	DefualtTimeInterval          = "3m"
 )
@@ -32,7 +32,7 @@ const (
 type Config struct {
 	GoogleAccessToken   string
 	AuthRefreshToken    string
-	GoogleSpreadsheetId string
+	GoogleSpreadsheetID string
 	GoogleSheetID       int64
 	IterationInterval   time.Duration
 }
@@ -48,9 +48,9 @@ func Parse(config map[string]string) (Config, error) {
 		return Config{}, requiredConfigErr(ConfigKeyRefreshToken)
 	}
 
-	spreadsheetId, ok := config[ConfigKeyGoogleSpreadsheetId]
-	if !ok || spreadsheetId == "" {
-		return Config{}, requiredConfigErr(ConfigKeyGoogleSpreadsheetId)
+	spreadsheetID, ok := config[ConfigKeyGoogleSpreadsheetID]
+	if !ok || spreadsheetID == "" {
+		return Config{}, requiredConfigErr(ConfigKeyGoogleSpreadsheetID)
 	}
 
 	gSheetID, ok := config[ConfigKeySheetID]
@@ -77,7 +77,7 @@ func Parse(config map[string]string) (Config, error) {
 	cfg := Config{
 		GoogleAccessToken:   accessToken,
 		AuthRefreshToken:    refreshToken,
-		GoogleSpreadsheetId: spreadsheetId,
+		GoogleSpreadsheetID: spreadsheetID,
 		GoogleSheetID:       sheetID,
 		IterationInterval:   timeInterval,
 	}
