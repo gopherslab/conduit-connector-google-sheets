@@ -41,7 +41,7 @@ func TestParse(t *testing.T) {
 			expected: Config{
 				GoogleAccessToken:   "",
 				AuthRefreshToken:    "",
-				GoogleSpreadsheetId: "",
+				GoogleSpreadsheetID: "",
 				GoogleSheetID:       2,
 				IterationInterval:   time.Duration(120000000000),
 			},
@@ -58,7 +58,7 @@ func TestParse(t *testing.T) {
 			expected: Config{
 				GoogleAccessToken:   "",
 				AuthRefreshToken:    "",
-				GoogleSpreadsheetId: "",
+				GoogleSpreadsheetID: "",
 				GoogleSheetID:       -1,
 				IterationInterval:   time.Duration(120000000000),
 			},
@@ -75,7 +75,7 @@ func TestParse(t *testing.T) {
 			expected: Config{
 				GoogleAccessToken:   "asdfghjkl",
 				AuthRefreshToken:    "qweafdfv",
-				GoogleSpreadsheetId: "",
+				GoogleSpreadsheetID: "",
 				GoogleSheetID:       365,
 				IterationInterval:   time.Duration(120000000000),
 			},
@@ -92,7 +92,7 @@ func TestParse(t *testing.T) {
 			expected: Config{
 				GoogleAccessToken:   "access-token here",
 				AuthRefreshToken:    "refresh-token here",
-				GoogleSpreadsheetId: "123abcd",
+				GoogleSpreadsheetID: "123abcd",
 				GoogleSheetID:       12,
 				IterationInterval:   time.Duration(120000000000),
 			},

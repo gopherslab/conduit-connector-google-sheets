@@ -38,7 +38,7 @@ func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
 	}
 
 	s.configData = config.Config{
-		GoogleSpreadsheetId: sheetsConfig.GoogleSpreadsheetId,
+		GoogleSpreadsheetID: sheetsConfig.GoogleSpreadsheetID,
 		GoogleSheetID:       sheetsConfig.GoogleSheetID,
 		IterationInterval:   sheetsConfig.IterationInterval,
 	}

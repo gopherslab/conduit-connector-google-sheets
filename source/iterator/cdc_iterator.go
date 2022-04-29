@@ -81,7 +81,7 @@ func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
 	// create the record
 	output := sdk.Record{
 		Metadata: map[string]string{
-			"SpreadsheetId": i.cfg.GoogleSpreadsheetId,
+			"SpreadsheetId": i.cfg.GoogleSpreadsheetID,
 			"SheetId":       fmt.Sprintf("%d", i.cfg.GoogleSheetID),
 			"dimension":     sheetData.sheetDimension,
 		},
@@ -115,7 +115,7 @@ func fetchSheetData(ctx context.Context, srv *sheets.Service, gsheet config.Conf
 		DateTimeRenderOption: dateTimeRenderOption,
 	}
 
-	res, err := srv.Spreadsheets.Values.BatchGetByDataFilter(gsheet.GoogleSpreadsheetId, rbt).Context(ctx).Do()
+	res, err := srv.Spreadsheets.Values.BatchGetByDataFilter(gsheet.GoogleSpreadsheetID, rbt).Context(ctx).Do()
 	if err != nil {
 		return nil, err
 	}

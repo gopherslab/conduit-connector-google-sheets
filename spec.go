@@ -39,7 +39,7 @@ func Specification() sdk.Specification {
 				Required:    true,
 				Description: "Google sign-in access token",
 			},
-			config.ConfigKeyGoogleSpreadsheetId: {
+			config.ConfigKeyGoogleSpreadsheetID: {
 				Default:     "",
 				Required:    true,
 				Description: "Google sheet id to fetch the records",
