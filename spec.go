@@ -34,7 +34,7 @@ func Specification() sdk.Specification {
 				Default:     "",
 				Required:    true,
 				Description: "Google sign-in access token",
-			},config.ConfigKeyRefreshToken: {
+			}, config.ConfigKeyRefreshToken: {
 				Default:     "",
 				Required:    true,
 				Description: "Google sign-in access token",
