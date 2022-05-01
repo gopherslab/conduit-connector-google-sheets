@@ -27,7 +27,6 @@ func ParseRecordPosition(p sdk.Position) (SheetPosition, error) {
 	if err != nil {
 		return SheetPosition{}, fmt.Errorf("could not parse the position timestamp: %w", err)
 	}
-
 	return recordPosition, err
 }
 

@@ -45,7 +45,6 @@ func NewCDCIterator(ctx context.Context, client *http.Client, spreadsheetId stri
 		timeInterval:  interval,
 		rp:            pos,
 	}
-
 	return c, nil
 }
 
@@ -54,8 +53,6 @@ func (i *CDCIterator) HasNext(ctx context.Context) bool {
 }
 
 func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
-	sdk.Logger(ctx).Info().Msg(fmt.Sprintf("API hit at: %v", i.rp.NextRun))
-
 	// read object
 	sheetData, err := fetchSheetData(ctx, i.service, i.spreadsheetID, i.sheetID, i.rp.RowOffset)
 	if err != nil {
@@ -70,7 +67,6 @@ func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
 	if len(sheetData.sheetRecords) == 0 {
 		i.rp.NextRun = time.Now().Add(i.timeInterval) //i.cfg.IterationInterval)
 		sdk.Logger(ctx).Info().Msg(fmt.Sprintf("The next API will hit after: %v", i.rp.NextRun))
-
 		return sdk.Record{
 			Position: lastRowPosition.RecordPosition(),
 		}, sdk.ErrBackoffRetry
@@ -94,7 +90,6 @@ func (i *CDCIterator) Next(ctx context.Context) (sdk.Record, error) {
 		Payload:   sdk.RawData(rawData),
 		CreatedAt: time.Now(),
 	}
-
 	i.rp.RowOffset = sheetData.rowCount
 	return output, nil
 }
@@ -110,7 +105,6 @@ func fetchSheetData(ctx context.Context, srv *sheets.Service, spreadsheetId stri
 		SheetId:       sheetId,
 		StartRowIndex: offset,
 	}
-
 	dataFilters = append(dataFilters, &s)
 	valueRenderOption := ""
 	dateTimeRenderOption := "FORMATTED_STRING"
@@ -119,7 +113,6 @@ func fetchSheetData(ctx context.Context, srv *sheets.Service, spreadsheetId stri
 		DataFilters:          dataFilters,
 		DateTimeRenderOption: dateTimeRenderOption,
 	}
-
 	res, err := srv.Spreadsheets.Values.BatchGetByDataFilter(spreadsheetId, rbt).Context(ctx).Do()
 	if err != nil {
 		return nil, err
@@ -141,12 +134,10 @@ func fetchSheetData(ctx context.Context, srv *sheets.Service, spreadsheetId stri
 			break
 		}
 	}
-
 	count := offset + int64(len(responseData))
 	return &Object{
 		sheetDimension: valueRange.MajorDimension,
 		sheetRecords:   responseData,
 		rowCount:       count,
 	}, nil
-
 }

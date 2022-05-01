@@ -76,7 +76,6 @@ func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
 	if err != nil {
 		return fmt.Errorf("couldn't create a iterator: %w", err)
 	}
-
 	return nil
 }
 
@@ -97,7 +96,6 @@ func (s *Source) Teardown(ctx context.Context) error {
 	if s.iterator != nil {
 		s.iterator = nil
 	}
-
 	return nil
 }
 

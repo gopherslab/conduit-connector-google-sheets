@@ -79,7 +79,6 @@ func Parse(config map[string]string) (Config, error) {
 		// GoogleSheetID:       sheetID,
 		// IterationInterval:   timeInterval,
 	}
-
 	return cfg, nil
 }
 
