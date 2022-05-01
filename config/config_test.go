@@ -16,7 +16,6 @@ package config
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -42,8 +41,8 @@ func TestParse(t *testing.T) {
 				GoogleAccessToken:   "",
 				AuthRefreshToken:    "",
 				GoogleSpreadsheetID: "",
-				GoogleSheetID:       2,
-				IterationInterval:   time.Duration(120000000000),
+				// GoogleSheetID:       2,
+				// IterationInterval:   time.Duration(120000000000),
 			},
 		},
 		{
@@ -59,8 +58,8 @@ func TestParse(t *testing.T) {
 				GoogleAccessToken:   "",
 				AuthRefreshToken:    "",
 				GoogleSpreadsheetID: "",
-				GoogleSheetID:       -1,
-				IterationInterval:   time.Duration(120000000000),
+				// GoogleSheetID:       -1,
+				// IterationInterval:   time.Duration(120000000000),
 			},
 		},
 		{
@@ -76,8 +75,8 @@ func TestParse(t *testing.T) {
 				GoogleAccessToken:   "asdfghjkl",
 				AuthRefreshToken:    "qweafdfv",
 				GoogleSpreadsheetID: "",
-				GoogleSheetID:       365,
-				IterationInterval:   time.Duration(120000000000),
+				// GoogleSheetID:       365,
+				// IterationInterval:   time.Duration(120000000000),
 			},
 		},
 		{
@@ -93,17 +92,13 @@ func TestParse(t *testing.T) {
 				GoogleAccessToken:   "access-token here",
 				AuthRefreshToken:    "refresh-token here",
 				GoogleSpreadsheetID: "123abcd",
-				GoogleSheetID:       12,
-				IterationInterval:   time.Duration(120000000000),
+				// GoogleSheetID:       12,
+				// IterationInterval:   time.Duration(120000000000),
 			},
 		},
 	}
 
 	for _, tc := range cases {
-		// cfg, err := Parse(tc.params)
-
-		// assert.Equal(t, tc.expected, cfg)
-
 		t.Run(tc.testCase, func(t *testing.T) {
 			cfg, err := Parse(tc.params)
 			if err != nil {

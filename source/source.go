@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/conduitio/conduit-connector-google-sheets/config"
 	"github.com/conduitio/conduit-connector-google-sheets/source/iterator"
 	"github.com/conduitio/conduit-connector-google-sheets/source/position"
 
@@ -18,7 +17,7 @@ type Source struct {
 
 	client     *http.Client
 	iterator   Iterator
-	configData config.Config
+	configData Config
 }
 
 type Iterator interface {
@@ -32,15 +31,21 @@ func NewSource() sdk.Source {
 }
 
 func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
-	sheetsConfig, err := config.Parse(cfg)
+	sheetsConfig, err := Parse(cfg) // config.Parse(cfg)
 	if err != nil {
 		return err
 	}
 
-	s.configData = config.Config{
-		GoogleSpreadsheetID: sheetsConfig.GoogleSpreadsheetID,
-		GoogleSheetID:       sheetsConfig.GoogleSheetID,
-		IterationInterval:   sheetsConfig.IterationInterval,
+	// s.configData = config.Config{
+	// 	GoogleSpreadsheetID: sheetsConfig.GoogleSpreadsheetID,
+	// 	GoogleSheetID:       sheetsConfig.GoogleSheetID,
+	// 	IterationInterval:   sheetsConfig.IterationInterval,
+	// }
+
+	s.configData = Config{
+		Config:            sheetsConfig.Config,
+		GoogleSheetID:     sheetsConfig.GoogleSheetID,
+		IterationInterval: sheetsConfig.IterationInterval,
 	}
 
 	token := &oauth2.Token{
@@ -61,7 +66,13 @@ func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
 		return fmt.Errorf("couldn't parse position: %w", err)
 	}
 
-	s.iterator, err = iterator.NewCDCIterator(ctx, s.client, s.configData, record)
+	s.iterator, err = iterator.NewCDCIterator(ctx, s.client,
+		s.configData.GoogleSpreadsheetID,
+		s.configData.GoogleSheetID,
+		s.configData.IterationInterval,
+		record,
+	)
+
 	if err != nil {
 		return fmt.Errorf("couldn't create a iterator: %w", err)
 	}
