@@ -11,7 +11,7 @@ import (
 const (
 	ConfigKeySheetID           = "sheet_id"
 	ConfigKeyIterationInterval = "iteration_interval"
-	DefualtTimeInterval        = "3m"
+	DefaultTimeInterval        = "3m"
 )
 
 type Config struct {
@@ -39,7 +39,7 @@ func Parse(cfg map[string]string) (Config, error) {
 	// Time interval being an optional value
 	interval := cfg[ConfigKeyIterationInterval]
 	if interval == "" {
-		interval = DefualtTimeInterval
+		interval = DefaultTimeInterval
 	}
 
 	timeInterval, err := time.ParseDuration(interval)

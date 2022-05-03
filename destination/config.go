@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	ConfigKeySheetRange = "range"
+	ConfigKeySheetRange = "sheet_range"
 
 	// This could be RAW or USER_ENTERED
 	ConfigKeyValueInputOption = "value_input_option"

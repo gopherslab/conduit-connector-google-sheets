@@ -61,7 +61,7 @@ func Parse(config map[string]string) (Config, error) {
 	// 	return Config{}, fmt.Errorf("%q cannot parse sheetID from string to int64", ConfigKeySheetID)
 	// }
 
-	// // Time interval being an optional value
+	// Time interval being an optional value
 	// interval := config[ConfigKeyIterationInterval]
 	// if interval == "" {
 	// 	interval = DefualtTimeInterval

@@ -9,6 +9,7 @@ import (
 
 	"github.com/conduitio/conduit-connector-google-sheets/source/position"
 	sdk "github.com/conduitio/conduit-connector-sdk"
+	
 	"google.golang.org/api/option"
 	sheets "google.golang.org/api/sheets/v4"
 )
@@ -30,7 +31,7 @@ type CDCIterator struct {
 }
 
 func NewCDCIterator(ctx context.Context, client *http.Client, spreadsheetId string, sheetId int64, interval time.Duration, pos position.SheetPosition) (*CDCIterator, error) {
-	var err error
+	// var err error
 	srv, err := sheets.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		return nil, err
