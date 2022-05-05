@@ -23,7 +23,6 @@ type Object struct {
 type CDCIterator struct {
 	service *sheets.Service
 	client  *http.Client
-	// cfg          config.Config
 	spreadsheetID string
 	sheetID       int64
 	timeInterval  time.Duration
@@ -40,7 +39,6 @@ func NewCDCIterator(ctx context.Context, client *http.Client, spreadsheetId stri
 	c := &CDCIterator{
 		service: srv,
 		client:  client,
-		// cfg:           cfg,
 		spreadsheetID: spreadsheetId,
 		sheetID:       sheetId,
 		timeInterval:  interval,

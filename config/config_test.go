@@ -41,8 +41,6 @@ func TestParse(t *testing.T) {
 				GoogleAccessToken:   "",
 				AuthRefreshToken:    "",
 				GoogleSpreadsheetID: "",
-				// GoogleSheetID:       2,
-				// IterationInterval:   time.Duration(120000000000),
 			},
 		},
 		{
@@ -58,8 +56,6 @@ func TestParse(t *testing.T) {
 				GoogleAccessToken:   "",
 				AuthRefreshToken:    "",
 				GoogleSpreadsheetID: "",
-				// GoogleSheetID:       -1,
-				// IterationInterval:   time.Duration(120000000000),
 			},
 		},
 		{
@@ -75,8 +71,6 @@ func TestParse(t *testing.T) {
 				GoogleAccessToken:   "asdfghjkl",
 				AuthRefreshToken:    "qweafdfv",
 				GoogleSpreadsheetID: "",
-				// GoogleSheetID:       365,
-				// IterationInterval:   time.Duration(120000000000),
 			},
 		},
 		{
@@ -92,8 +86,6 @@ func TestParse(t *testing.T) {
 				GoogleAccessToken:   "access-token here",
 				AuthRefreshToken:    "refresh-token here",
 				GoogleSpreadsheetID: "123abcd",
-				// GoogleSheetID:       12,
-				// IterationInterval:   time.Duration(120000000000),
 			},
 		},
 	}
