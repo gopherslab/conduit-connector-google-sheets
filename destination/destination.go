@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"net/http"
 
-	updater "github.com/conduitio/conduit-connector-google-sheets/destination/update"
+	"github.com/conduitio/conduit-connector-google-sheets/destination/model"
+	u "github.com/conduitio/conduit-connector-google-sheets/destination/update"
 
 	"google.golang.org/api/option"
 	sheets "google.golang.org/api/sheets/v4"
-
-	// "github.com/conduitio/conduit-connector-google-sheets/destination/insert"
-
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"golang.org/x/oauth2"
 )
@@ -23,15 +21,7 @@ type Destination struct {
 	client   *http.Client
 	service  *sheets.Service
 	toUpdate bool
-	// object   writer.RecordDetails
-	obj DestObject
-	// sWriter  writer.GoogleSheetWriter
-}
-
-type DestObject struct {
-	spreadsheetID string
-	sheetRange    string
-	inputOption   string
+	object   model.SheetObject
 }
 
 func NewDestination() sdk.Destination {
@@ -56,26 +46,21 @@ func (d *Destination) Configure(ctx context.Context, cfg map[string]string) erro
 	var authCfg *oauth2.Config
 	d.client = authCfg.Client(context.Background(), token)
 	d.toUpdate = true
-	d.obj = DestObject{
-		spreadsheetID: destinationConfig.GoogleSpreadsheetID,
-		sheetRange:    destinationConfig.SheetRange,
-		inputOption:   destinationConfig.ValueInputOption,
+	d.object = model.SheetObject{
+		SpreadsheetID: destinationConfig.GoogleSpreadsheetID,
+		SheetRange:    destinationConfig.SheetRange,
+		InputOption:   destinationConfig.ValueInputOption,
 	}
 
-	fmt.Printf("*************+===========%#v\n\n======:", d.obj)
+	fmt.Printf("*************+===========%#v\n\n======:", d.object)
 
 	return nil
 }
 
 // Open makes sure everything is prepared to receive records.
 func (d *Destination) Open(ctx context.Context) error {
-	// sheetWriter, err := writer.NewWriter(ctx, d.client, d.object)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// d.sWriter = *sheetWriter
 	fmt.Println("************************" + "Inside open method" + "**************************")
+	
 	var err error
 	d.service, err = sheets.NewService(ctx, option.WithHTTPClient(d.client))
 	if err != nil {
@@ -95,11 +80,9 @@ func (d *Destination) WriteAsync(ctx context.Context, r sdk.Record, ackFunc sdk.
 
 	fmt.Printf("=================%#v\n\n=======================", r)
 	fmt.Printf("=================%s\n\n=======================", r.Payload)
-	fmt.Println("*******************", d.obj.spreadsheetID, d.obj.sheetRange, d.obj.inputOption)
+	fmt.Println("*******************", d.object.SpreadsheetID, d.object.SheetRange, d.object.InputOption)
 
-	err := updater.UpdateSpreadsheetRecord(ctx, d.service, d.client,
-		d.obj.spreadsheetID, d.obj.sheetRange, d.obj.inputOption,
-		r.Payload.Bytes())
+	err := u.UpdateSpreadsheetRecord(ctx, d.service, d.object, r.Payload.Bytes())
 	if err != nil {
 		return err
 	}
@@ -107,28 +90,11 @@ func (d *Destination) WriteAsync(ctx context.Context, r sdk.Record, ackFunc sdk.
 	return nil
 }
 
-func (d *Destination) Write(ctx context.Context, r sdk.Record) error {
-	fmt.Println("************************" + "Inside Write method" + "**************************")
-
-	// fmt.Printf("=================%#v\n\n=======================", r)
-	// fmt.Printf("=================%s\n\n=======================", r.Payload)
-	// fmt.Println("*******************", d.obj.spreadsheetID, d.obj.sheetRange, d.obj.inputOption)
-
-	// err := updater.UpdateSpreadsheetRecord(ctx, d.service, d.client,
-	// 	d.obj.spreadsheetID, d.obj.sheetRange, d.obj.inputOption,
-	// 	r.Payload.Bytes())
-	// if err != nil {
-	// 	return err
-	// }
-
-	return nil
-}
-
 // Teardown gracefully disconnects the client
 func (d *Destination) Teardown(ctx context.Context) error {
 	fmt.Println("************************" + "Inside Teardown method" + "**************************")
-
-	d.client = nil
 	d.service = nil
+	d.client = nil
+
 	return nil // TODO
 }
