@@ -16,14 +16,14 @@ jobs:
         with:
           go-version: 1.17
 
-  fetchToken:
-    runs-on: ubuntu-latest
-    steps:
-       - uses: cardinalby/google-api-fetch-token-action@v1
-         with:
-          clientId: ${{ secrets.G_API_CLIENT_ID }}
-          clientSecret: ${{ secrets.G_API_CLIENT_SECRET }}
-          refreshToken: ${{ secrets.G_API_REFRESH_TOKEN }}
+  # fetchToken:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #      - uses: cardinalby/google-api-fetch-token-action@v1
+  #        with:
+  #         clientId: ${{ secrets.G_API_CLIENT_ID }}
+  #         clientSecret: ${{ secrets.G_API_CLIENT_SECRET }}
+  #         refreshToken: ${{ secrets.G_API_REFRESH_TOKEN }}
 
-       - name: Test
-         run: make test GOTEST_FLAGS="-v -count=1"
+      - name: Test
+        run: make test GOTEST_FLAGS="-v -count=1"
