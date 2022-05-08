@@ -46,7 +46,6 @@ type SheetsIterator struct {
 
 func NewSheetsIterator(ctx context.Context, config scfg.Config,
 	client *http.Client, tp *position.SheetPosition) (*SheetsIterator, error) {
-	sdk.Logger(ctx).Info().Msg("inside the newsheetiterator++++++++++++")
 	tmbWithCtx, ctx := tomb.WithContext(ctx)
 
 	cdc := &SheetsIterator{
@@ -67,18 +66,15 @@ func NewSheetsIterator(ctx context.Context, config scfg.Config,
 }
 
 func (c *SheetsIterator) startIterator(ctx context.Context) func() error {
-	sdk.Logger(ctx).Info().Msg("++++++++inside start iterator+++++++++++++")
+	sdk.Logger(ctx).Info().Msg("++++++++starting iterator+++++++++++++")
 	return func() error {
 		defer close(c.caches)
 		for {
 			select {
 			case <-c.tomb.Dying():
-				fmt.Println("++++++++inside case dying+++++++++++")
 				return c.tomb.Err()
 			case <-c.ticker.C:
-				fmt.Println("++++++++inside case ticker.C  +++++++++++")
 				records, err := c.getSheetRecords(ctx)
-				fmt.Println("++++++++Records:  +++++++++++", records)
 				if err != nil {
 					return err
 				}
@@ -101,7 +97,6 @@ func (c *SheetsIterator) startIterator(ctx context.Context) func() error {
 }
 
 func (c *SheetsIterator) flush() error {
-	fmt.Println("+++++++++++flushing the array++++++++++++")
 	defer close(c.buffer)
 	for {
 		select {
@@ -116,13 +111,10 @@ func (c *SheetsIterator) flush() error {
 }
 
 func (c *SheetsIterator) HasNext(_ context.Context) bool {
-	fmt.Println("++++++HastNext++++++++++++")
-	fmt.Println("Bool Value++++++++++>>>>>>>>", len(c.buffer) > 0 || !c.tomb.Alive())
 	return len(c.buffer) > 0 || !c.tomb.Alive()
 }
 
 func (c *SheetsIterator) Next(ctx context.Context) (sdk.Record, error) {
-	fmt.Println("++++++Next++++++++++++")
 	select {
 	case rec := <-c.buffer:
 		return rec, nil
@@ -134,22 +126,17 @@ func (c *SheetsIterator) Next(ctx context.Context) (sdk.Record, error) {
 }
 
 func (c *SheetsIterator) Stop() {
-	fmt.Println("++++++Stop++++++++++++")
 	c.ticker.Stop()
 	c.tomb.Kill(errors.New("iterator stopped"))
 }
 
 func (c *SheetsIterator) getSheetRecords(ctx context.Context) ([]sdk.Record, error) {
-	fmt.Println("++++++getSheetRecords++++++++++++")
 	if c.nextRun.After(time.Now()) {
-		fmt.Println("++++++++Error on line 128+++++++++++")
 		return nil, nil
 	}
 
 	sheetService, err := sheets.NewService(ctx, option.WithHTTPClient(c.client))
 	if err != nil {
-		fmt.Println("++++++++Error on line 134+++++++++++")
-
 		return nil, err
 	}
 
@@ -168,16 +155,12 @@ func (c *SheetsIterator) getSheetRecords(ctx context.Context) ([]sdk.Record, err
 		DateTimeRenderOption: dateTimeRenderOption,
 	}
 
-	fmt.Println("offset here-------------->", c.cfg.GoogleSpreadsheetID, c.rowOffset)
-
 	res, err := sheetService.Spreadsheets.Values.BatchGetByDataFilter(c.cfg.GoogleSpreadsheetID, rbt).Context(ctx).Do()
 	if err != nil {
-		fmt.Println("error here-------------->", err)
 		return nil, err
 	}
 	valueRange := res.ValueRanges[0].ValueRange
 	if (res.HTTPStatusCode != http.StatusOK) || res == nil {
-		fmt.Println("error on line 141-------------->", err)
 		c.nextRun = time.Now().Add(time.Duration(c.cfg.IterationInterval))
 		return nil, nil
 	}
@@ -190,13 +173,10 @@ func (c *SheetsIterator) getSheetRecords(ctx context.Context) ([]sdk.Record, err
 		}
 	}
 
-	fmt.Println("++++++++On line 175+++++++++++")
-
 	records := make([]sdk.Record, 0, len(responseData))
 	for index, val := range responseData {
 		rawData, err := json.Marshal(val)
 		if err != nil {
-			fmt.Println("error on line 164-------------->", err)
 			return records, fmt.Errorf("error marshaling the map: %w", err)
 		}
 		lastRowPosition := position.SheetPosition{
@@ -213,8 +193,5 @@ func (c *SheetsIterator) getSheetRecords(ctx context.Context) ([]sdk.Record, err
 			Payload:   sdk.RawData(rawData),
 		})
 	}
-
-	fmt.Println("++++++++Successfully created the record+++++++++++")
-
 	return records, nil
 }
