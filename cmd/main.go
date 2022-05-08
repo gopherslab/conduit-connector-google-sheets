@@ -22,5 +22,6 @@ import (
 )
 
 func main() {
+	// sdk.Serve(gs.Specification, source.NewSource, destination.NewDestination)
 	sdk.Serve(gs.Specification, source.NewSource, nil)
 }

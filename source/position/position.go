@@ -38,6 +38,7 @@ func ParseRecordPosition(p sdk.Position) (SheetPosition, error) {
 		return SheetPosition{}, err
 	}
 
+	fmt.Println("+++++++++++>>>>>>>>>>>>>>>", string(p))
 	err = json.Unmarshal(p, &recordPosition)
 	if err != nil {
 		return SheetPosition{}, fmt.Errorf("could not parse the position timestamp: %w", err)

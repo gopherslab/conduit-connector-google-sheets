@@ -7,6 +7,7 @@ require (
 	github.com/stretchr/testify v1.7.1
 	golang.org/x/oauth2 v0.0.0-20220309155454-6242fa91716a
 	google.golang.org/api v0.74.0
+	gopkg.in/tomb.v2 v2.0.0-20161208151619-d5d1b5820637
 )
 
 require (
@@ -37,6 +38,5 @@ require (
 	google.golang.org/genproto v0.0.0-20220324131243-acbaeb5b85eb // indirect
 	google.golang.org/grpc v1.45.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
-	gopkg.in/tomb.v2 v2.0.0-20161208151619-d5d1b5820637 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
