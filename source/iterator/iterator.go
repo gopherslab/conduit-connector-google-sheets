@@ -161,7 +161,7 @@ func (c *SheetsIterator) getSheetRecords(ctx context.Context) ([]sdk.Record, err
 	}
 	valueRange := res.ValueRanges[0].ValueRange
 	if (res.HTTPStatusCode != http.StatusOK) || res == nil {
-		c.nextRun = time.Now().Add(time.Duration(c.cfg.IterationInterval))
+		c.nextRun = time.Now().Add(c.cfg.IterationInterval)
 		return nil, nil
 	}
 
