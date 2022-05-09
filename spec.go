@@ -17,7 +17,7 @@ package googlesheets
 
 import (
 	"github.com/conduitio/conduit-connector-google-sheets/config"
-	dconfig "github.com/conduitio/conduit-connector-google-sheets/destination/destinationConfig"
+	dconfig "github.com/conduitio/conduit-connector-google-sheets/destination/destinationconfig"
 	sconfig "github.com/conduitio/conduit-connector-google-sheets/source/sourceconfig"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
