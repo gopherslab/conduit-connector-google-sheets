@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package source
 
 import (
@@ -45,41 +46,39 @@ func NewSource() sdk.Source {
 	return &Source{}
 }
 
+// Configure validates the passed config and prepares the source connector
 func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
-	sheetsConfig, err := Parse(cfg) // config.Parse(cfg)
+	sheetsConfig, err := Parse(cfg)
 	if err != nil {
 		return err
 	}
 
-	s.configData = Config{
-		Config:            sheetsConfig.Config,
-		GoogleSheetID:     sheetsConfig.GoogleSheetID,
-		IterationInterval: sheetsConfig.IterationInterval,
-	}
+	s.configData = sheetsConfig
 
 	token := &oauth2.Token{
-		AccessToken:  sheetsConfig.GoogleAccessToken,
+		AccessToken:  sheetsConfig.Config.GoogleAccessToken,
 		TokenType:    "Bearer",
-		RefreshToken: sheetsConfig.AuthRefreshToken,
+		RefreshToken: sheetsConfig.Config.AuthRefreshToken,
+		Expiry:       sheetsConfig.Config.TokenExpiry, // required for refresh functionality to work
 	}
 
 	var authCfg *oauth2.Config
-	s.client = authCfg.Client(context.Background(), token)
+	s.client = authCfg.Client(ctx, token)
+
 	return nil
 }
 
 // Open prepare the plugin to start sending records from the given position
 func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
-	record, err := position.ParseRecordPosition(rp)
+	pos, err := position.ParseRecordPosition(rp)
 	if err != nil {
 		return fmt.Errorf("couldn't parse position: %w", err)
 	}
 
-	s.iterator, err = iterator.NewCDCIterator(ctx, s.client,
+	s.iterator, err = iterator.NewSheetsIterator(ctx, s.client, pos,
 		s.configData.GoogleSpreadsheetID,
 		s.configData.GoogleSheetID,
-		s.configData.IterationInterval,
-		record,
+		s.configData.PollingPeriod,
 	)
 
 	if err != nil {
@@ -101,13 +100,22 @@ func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
 	return r, nil
 }
 
-func (s *Source) Teardown(ctx context.Context) error {
+// Teardown is called by the conduit server to stop the source connector
+// all the cleanup should be done in this function
+func (s *Source) Teardown(_ context.Context) error {
 	if s.iterator != nil {
+		s.iterator.Stop()
 		s.iterator = nil
 	}
 	return nil
 }
 
-func (s *Source) Ack(ctx context.Context, position sdk.Position) error {
+// Ack is called by the conduit server after the record has been successfully processed by all destination connectors
+func (s *Source) Ack(ctx context.Context, tp sdk.Position) error {
+	pos, err := position.ParseRecordPosition(tp)
+	if err != nil {
+		sdk.Logger(ctx).Error().Err(err).Msg("invalid position received")
+	}
+	sdk.Logger(ctx).Info().Int64("row_offset", pos.RowOffset).Msg("message ack received")
 	return nil
 }

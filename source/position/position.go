@@ -13,21 +13,21 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package position
 
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
 type SheetPosition struct {
-	RowOffset int64     `json:"row_offset"`
-	NextRun   time.Time `json:"next_run"`
+	RowOffset int64 `json:"row_offset"`
 }
 
+// ParseRecordPosition is used to parse the sdk.Position to SheetPosition type
 func ParseRecordPosition(p sdk.Position) (SheetPosition, error) {
 	var (
 		err            error
@@ -45,6 +45,7 @@ func ParseRecordPosition(p sdk.Position) (SheetPosition, error) {
 	return recordPosition, err
 }
 
+// RecordPosition converts the SheetPosition to sdk.Position to be returned in sdk.Record
 func (s SheetPosition) RecordPosition() sdk.Position {
 	pos, err := json.Marshal(s)
 	if err != nil {

@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package source
 
 import (
@@ -24,15 +25,15 @@ import (
 )
 
 const (
-	ConfigKeySheetID           = "sheet_id"
-	ConfigKeyIterationInterval = "iteration_interval"
-	DefaultTimeInterval        = "3m"
+	ConfigKeySheetID       = "sheet_id"
+	ConfigKeyPollingPeriod = "polling_period"
+	defaultPollingPeriod   = "6s"
 )
 
 type Config struct {
 	config.Config
-	GoogleSheetID     int64
-	IterationInterval time.Duration
+	GoogleSheetID int64
+	PollingPeriod time.Duration
 }
 
 func Parse(cfg map[string]string) (Config, error) {
@@ -52,9 +53,9 @@ func Parse(cfg map[string]string) (Config, error) {
 	}
 
 	// Time interval being an optional value
-	interval := cfg[ConfigKeyIterationInterval]
+	interval := cfg[ConfigKeyPollingPeriod]
 	if interval == "" {
-		interval = DefaultTimeInterval
+		interval = defaultPollingPeriod
 	}
 
 	timeInterval, err := time.ParseDuration(interval)
@@ -63,9 +64,9 @@ func Parse(cfg map[string]string) (Config, error) {
 	}
 
 	sourceConfig := Config{
-		Config:            commonConfig,
-		GoogleSheetID:     sheetID,
-		IterationInterval: timeInterval,
+		Config:        commonConfig,
+		GoogleSheetID: sheetID,
+		PollingPeriod: timeInterval,
 	}
 
 	return sourceConfig, nil

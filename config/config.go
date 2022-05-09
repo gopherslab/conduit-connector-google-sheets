@@ -18,17 +18,20 @@ package config
 
 import (
 	"fmt"
+	"time"
 )
 
 const (
 	ConfigKeyGoogleAccessToken   = "access_token"
 	ConfigKeyRefreshToken        = "refresh_token"
+	ConfigKeyExpiry              = "expiry"
 	ConfigKeyGoogleSpreadsheetID = "spreadsheet_id"
 )
 
 type Config struct {
 	GoogleAccessToken   string
 	AuthRefreshToken    string
+	TokenExpiry         time.Time
 	GoogleSpreadsheetID string
 }
 
@@ -48,10 +51,20 @@ func Parse(config map[string]string) (Config, error) {
 		return Config{}, requiredConfigErr(ConfigKeyGoogleSpreadsheetID)
 	}
 
+	expiryString, ok := config[ConfigKeyExpiry]
+	if !ok || spreadsheetID == "" {
+		return Config{}, requiredConfigErr(ConfigKeyExpiry)
+	}
+	expiryTime, err := time.Parse(time.RFC3339, expiryString)
+	if err != nil {
+		return Config{}, fmt.Errorf("invalid token_expiry time passed, expected format: %s, err:%w", time.RFC3339, err)
+	}
+
 	cfg := Config{
 		GoogleAccessToken:   accessToken,
 		AuthRefreshToken:    refreshToken,
 		GoogleSpreadsheetID: spreadsheetID,
+		TokenExpiry:         expiryTime,
 	}
 	return cfg, nil
 }

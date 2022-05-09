@@ -83,8 +83,8 @@ func Specification() sdk.Specification {
 				Required:    true,
 				Description: "Google SheetID to fetch the records from a particular SpreadsheetId",
 			},
-			source.ConfigKeyIterationInterval: {
-				Default:     "3m",
+			source.ConfigKeyPollingPeriod: {
+				Default:     "6s",
 				Required:    false,
 				Description: "Time interval for consecutive fetching data.",
 			},
