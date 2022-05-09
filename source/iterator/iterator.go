@@ -131,9 +131,9 @@ func (c *SheetsIterator) Stop() {
 }
 
 func (c *SheetsIterator) getSheetRecords(ctx context.Context) ([]sdk.Record, error) {
-	if c.nextRun.After(time.Now()) {
-		return nil, nil
-	}
+	// if c.nextRun.After(time.Now()) {
+	// 	return nil, nil
+	// }
 
 	sheetService, err := sheets.NewService(ctx, option.WithHTTPClient(c.client))
 	if err != nil {

@@ -16,50 +16,49 @@ limitations under the License.
 package writer
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
+
+	dcfg "github.com/conduitio/conduit-connector-google-sheets/destination/destinationconfig"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
+	"google.golang.org/api/option"
+	sheets "google.golang.org/api/sheets/v4"
 )
 
-func Writer(record []sdk.Record) error {
-	var sheetFormat []interface{}
-	for _, data := range record {
-		sheetFormat = append(sheetFormat, data.Payload.Bytes())
+func Writer(ctx context.Context, record []sdk.Record, cfg dcfg.Config, client *http.Client) error {
+	var data [][]interface{}
+
+	for _, data3 := range record {
+		rowArr := make([]interface{}, 0)
+		err := json.Unmarshal(data3.Payload.Bytes(), &rowArr)
+		if err != nil {
+			return fmt.Errorf("unable to marshal the record %w", err)
+		}
+		data = append(data, rowArr)
 	}
 
-	fmt.Printf("=====================\n\n%#v\n\n==========================", sheetFormat...)
-	fmt.Printf("=====================\n\n%s\n\n==========================", sheetFormat...)
+	sheetService, err := sheets.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return fmt.Errorf("unable to create google-sheet service %w", err)
+	}
 
+	sheetValueFormat := &sheets.ValueRange{
+		MajorDimension: "ROWS",
+		Range:          cfg.SheetRange,
+		Values:         data,
+	}
+
+	_, err = sheetService.Spreadsheets.Values.Append(
+		cfg.GoogleSpreadsheetID, cfg.SheetRange,
+		sheetValueFormat).ValueInputOption(
+		cfg.ValueInputOption).InsertDataOption(
+		cfg.InsertDataOption).Context(ctx).Do()
+
+	if err != nil {
+		return fmt.Errorf("error pushing records to google-sheets %w", err)
+	}
 	return nil
 }
-
-/*
-func appendToSpreadsheet(srv *sheets.Service, ctx context.Context) {
-	spreadsheetId := "1gQjm4hnSdrMFyPjhlwSGLBbj0ACOxFQJpVST1LmW6Hg" // TODO: Update placeholder value.
-
-	// The A1 notation of a range to search for a logical table of data.
-	// Values will be appended after the last row of the table.
-	range2 := "Sheet1!A10" // TODO: Update placeholder value.
-
-	// How the input data should be interpreted.
-	valueInputOption := "USER_ENTERED" // TODO: Update placeholder value.
-
-	// How the input data should be inserted.
-	insertDataOption := "INSERT_ROWS" // TODO: Update placeholder value.
-
-	Data := [][]interface{}{{"Sahil", "3987", "13,000", "24", "Probation", "Fresher"}}
-
-	rb := &sheets.ValueRange{
-		MajorDimension: "ROWS",
-		Range:          range2,
-		Values:         Data,
-	}
-
-	resp, err := srv.Spreadsheets.Values.Append(spreadsheetId, range2, rb).ValueInputOption(valueInputOption).InsertDataOption(insertDataOption).Context(ctx).Do()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// TODO: Change code below to process the `resp` object:
-	fmt.Printf("%#v\n", resp)
-}*/
