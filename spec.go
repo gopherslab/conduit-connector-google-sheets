@@ -17,8 +17,8 @@ package googlesheets
 
 import (
 	"github.com/conduitio/conduit-connector-google-sheets/config"
-	dconfig "github.com/conduitio/conduit-connector-google-sheets/destination/destinationconfig"
-	sconfig "github.com/conduitio/conduit-connector-google-sheets/source/sourceconfig"
+	dconfig "github.com/conduitio/conduit-connector-google-sheets/destination/config"
+	sconfig "github.com/conduitio/conduit-connector-google-sheets/source/config"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
@@ -32,58 +32,58 @@ func Specification() sdk.Specification {
 		Version:     "v0.1.0",
 		Author:      "Meroxa, Inc.",
 		DestinationParams: map[string]sdk.Parameter{
-			config.ConfigKeyGoogleAccessToken: {
+			config.KeyGoogleAccessToken: {
 				Default:     "",
 				Required:    true,
 				Description: "Google sign-in access token",
-			}, config.ConfigKeyRefreshToken: {
+			}, config.KeyRefreshToken: {
 				Default:     "",
 				Required:    true,
 				Description: "Google sign-in access token",
 			},
-			config.ConfigKeyGoogleSpreadsheetID: {
+			config.KeyGoogleSpreadsheetID: {
 				Default:     "",
 				Required:    true,
 				Description: "Google sheet id to fetch the records",
 			},
-			dconfig.ConfigKeySheetRange: {
+			dconfig.KeySheetRange: {
 				Default:     "",
 				Required:    true,
 				Description: "Google sheet id to fetch the records",
 			},
-			dconfig.ConfigKeyValueInputOption: {
+			dconfig.KeyValueInputOption: {
 				Default:     "",
 				Required:    true,
 				Description: "Google sheet id to fetch the records",
 			},
-			dconfig.ConfigKeyInsertDataOption: {
+			dconfig.KeyInsertDataOption: {
 				Default:     dconfig.DefaultKeyInsertDataOption,
 				Required:    false,
 				Description: "Google sheet id to fetch the records",
 			},
 		},
 		SourceParams: map[string]sdk.Parameter{
-			config.ConfigKeyGoogleAccessToken: {
+			config.KeyGoogleAccessToken: {
 				Default:     "",
 				Required:    true,
 				Description: "Google sign-in access token",
 			},
-			config.ConfigKeyRefreshToken: {
+			config.KeyRefreshToken: {
 				Default:     "",
 				Required:    true,
 				Description: "Google sign-in access token",
 			},
-			config.ConfigKeyGoogleSpreadsheetID: {
+			config.KeyGoogleSpreadsheetID: {
 				Default:     "",
 				Required:    true,
 				Description: "Google sheet id to fetch the records",
 			},
-			sconfig.ConfigKeySheetID: {
+			sconfig.KeySheetID: {
 				Default:     "",
 				Required:    true,
 				Description: "Google SheetID to fetch the records from a particular SpreadsheetId",
 			},
-			sconfig.ConfigKeyPollingPeriod: {
+			sconfig.KeyPollingPeriod: {
 				Default:     "6s",
 				Required:    false,
 				Description: "Time interval for consecutive fetching data.",

@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"net/http"
 
-	dcfg "github.com/conduitio/conduit-connector-google-sheets/destination/destinationconfig"
+	dcfg "github.com/conduitio/conduit-connector-google-sheets/destination/config"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"google.golang.org/api/option"

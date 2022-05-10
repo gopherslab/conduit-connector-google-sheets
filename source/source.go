@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"net/http"
 
+	sc "github.com/conduitio/conduit-connector-google-sheets/source/config"
 	"github.com/conduitio/conduit-connector-google-sheets/source/iterator"
 	"github.com/conduitio/conduit-connector-google-sheets/source/position"
-	sc "github.com/conduitio/conduit-connector-google-sheets/source/sourceconfig"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"golang.org/x/oauth2"

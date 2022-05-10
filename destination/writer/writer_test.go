@@ -12,6 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package writer
 
 import (
@@ -20,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/conduitio/conduit-connector-google-sheets/config"
-	"github.com/conduitio/conduit-connector-google-sheets/destination/destinationconfig"
+	destConfig "github.com/conduitio/conduit-connector-google-sheets/destination/config"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/stretchr/testify/assert"
 )
@@ -29,7 +30,7 @@ type writerTest []struct {
 	testName string
 	ctx      context.Context
 	r        []sdk.Record
-	cfg      destinationconfig.Config
+	cfg      destConfig.Config
 	client   *http.Client
 	expected [][]interface{}
 }
@@ -39,7 +40,7 @@ func TestWriter(t *testing.T) {
 		{
 			testName: "Empty Record Payload",
 			r:        []sdk.Record{},
-			cfg: destinationconfig.Config{
+			cfg: destConfig.Config{
 				Config: config.Config{
 					GoogleAccessToken:   "access-token here",
 					AuthRefreshToken:    "refresh-token here",

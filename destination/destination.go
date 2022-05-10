@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package destination
 
 import (
@@ -20,7 +21,7 @@ import (
 	"net/http"
 	"sync"
 
-	dConfig "github.com/conduitio/conduit-connector-google-sheets/destination/destinationconfig"
+	dConfig "github.com/conduitio/conduit-connector-google-sheets/destination/config"
 	"github.com/conduitio/conduit-connector-google-sheets/destination/writer"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
