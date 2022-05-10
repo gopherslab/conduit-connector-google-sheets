@@ -31,7 +31,6 @@ import (
 type Source struct {
 	sdk.UnimplementedSource
 
-	// token      *oauth2.Token
 	client     *http.Client
 	iterator   Iterator
 	configData sc.Config
@@ -78,18 +77,6 @@ func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
 	if err != nil {
 		return fmt.Errorf("couldn't parse position: %w", err)
 	}
-
-	// s.iterator, err = iterator.NewCDCIterator(ctx, s.client,
-	// 	s.configData.GoogleSpreadsheetID,
-	// 	s.configData.GoogleSheetID,
-	// 	s.configData.IterationInterval,
-	// 	record,
-	// )
-
-	// s.iterator, err = iterator.NewSheetIterator(ctx, s.client, s.configData, record)
-	// if err != nil {
-	// 	return fmt.Errorf("couldn't create a iterator: %w", err)
-	// }
 
 	s.iterator, err = iterator.NewSheetsIterator(ctx,
 		s.configData, s.client, &record)

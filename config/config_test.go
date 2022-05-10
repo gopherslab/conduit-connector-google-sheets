@@ -29,34 +29,13 @@ type testCase []struct {
 func TestParse(t *testing.T) {
 	cases := testCase{
 		{
-			testCase: "Checking against default values",
+			testCase: "Checking against if any/all required value are empty",
 			params: map[string]string{
 				"access_token":       "",
 				"refresh_token":      "",
 				"spreadsheet_id":     "",
-				"sheet_id":           "",
-				"iteration_interval": "2m",
 			},
-			expected: Config{
-				GoogleAccessToken:   "",
-				AuthRefreshToken:    "",
-				GoogleSpreadsheetID: "",
-			},
-		},
-		{
-			testCase: "Checking against if any required value is empty",
-			params: map[string]string{
-				"access_token":       "",
-				"refresh_token":      "",
-				"spreadsheet_id":     "",
-				"sheet_id":           "-1",
-				"iteration_interval": "2m",
-			},
-			expected: Config{
-				GoogleAccessToken:   "",
-				AuthRefreshToken:    "",
-				GoogleSpreadsheetID: "",
-			},
+			expected: Config{},
 		},
 		{
 			testCase: "Checking against random values case",
@@ -64,14 +43,8 @@ func TestParse(t *testing.T) {
 				"access_token":       "asdfghjkl",
 				"refresh_token":      "qweafdfv",
 				"spreadsheet_id":     "",
-				"sheet_id":           "365",
-				"iteration_interval": "2m",
 			},
-			expected: Config{
-				GoogleAccessToken:   "asdfghjkl",
-				AuthRefreshToken:    "qweafdfv",
-				GoogleSpreadsheetID: "",
-			},
+			expected: Config{},
 		},
 		{
 			testCase: "Checking for IDEAL case",
@@ -79,8 +52,6 @@ func TestParse(t *testing.T) {
 				"access_token":       "access-token here",
 				"refresh_token":      "refresh-token here",
 				"spreadsheet_id":     "123abcd",
-				"sheet_id":           "12",
-				"iteration_interval": "2m",
 			},
 			expected: Config{
 				GoogleAccessToken:   "access-token here",
