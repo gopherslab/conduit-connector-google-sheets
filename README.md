@@ -40,3 +40,28 @@ The config passed to `Configure` can contain the following fields.
 
 * At a time, only one `sheet_id` can be used to fetch the records from the google-sheet.
 * Any modification/update/delete made to a previous row(s) in google-sheet, after the records are fetched will not be visible in the next api hit.
+
+
+## Google-Sheet Destination
+
+The Google-Sheet Destination connector connects to the provided Google SheetID with the provided configurations, using `access_token`, `refresh_token`, `spreadsheet_id`, `sheet_range`, `value_input_option`.  Then will call `Configure` to parse the configurations, If parsing was not successful, then an error will occur. After that, the Open method is called to start the connection. 
+
+
+### Google-Sheet Writer
+
+The destination writer maintains a buffer of length 4, or each time `WriteAsyn` is called, a new record is added to the buffer. When the buffer is full, all the records from it will be written/appended to the last row of google-sheets and an ack function will be called for each record after being written.
+
+
+### Configuration
+
+The config passed to `Configure` can contain the following fields.
+
+
+| name                  | description                                                                            | required  | example             |
+|-----------------------|----------------------------------------------------------------------------------------|-----------|---------------------|
+| `access_key`     |  Google Oauth2 Access Token                                                                    | yes       | "ACCESS_TOKEN" |
+| `refresh_token` | Google Oauth2 Refresh Token                                                                   | yes       | "REFRESH_TOKEN" |
+| `spreadsheet_id`          | Spreadsheet ID                                                                | yes       | "SPREADSHEET_ID"         |
+| `sheet_range`          | Unique ID(integer value) for every sheet (i.e gid in the url)                                                                  | yes       | "SHEET_NAME"       |
+| `value_input_option`       | time interval between two consecutive hits. Can be in format as s for seconds, m for minutes, h for hours (for eg: 2s; 2m; 2h)  | yes        | "USER_ENTERED"            |
+| `insert_data_option`       | time interval between two consecutive hits. Can be in format as s for seconds, m for minutes, h for hours (for eg: 2s; 2m; 2h)  | no        | "INSERT_ROWS"            |
