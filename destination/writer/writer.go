@@ -22,7 +22,7 @@ import (
 	"net/http"
 
 	dcfg "github.com/conduitio/conduit-connector-google-sheets/destination/config"
-
+	
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"google.golang.org/api/option"
 	sheets "google.golang.org/api/sheets/v4"

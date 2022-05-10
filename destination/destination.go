@@ -72,8 +72,8 @@ func (d *Destination) Open(context.Context) error {
 	var authCfg *oauth2.Config
 
 	// initializing the buffer
-	d.Buffer = make([]sdk.Record, 0, 1)
-	d.AckCache = make([]sdk.AckFunc, 0, 1)
+	d.Buffer = make([]sdk.Record, 0, d.DestinationConfig.BufferSize)
+	d.AckCache = make([]sdk.AckFunc, 0, d.DestinationConfig.BufferSize)
 
 	d.Client = authCfg.Client(context.Background(), d.Token)
 
@@ -96,7 +96,7 @@ func (d *Destination) WriteAsync(ctx context.Context,
 	d.Buffer = append(d.Buffer, r)
 	d.AckCache = append(d.AckCache, ack)
 
-	if len(d.Buffer) >= 4 {
+	if len(d.Buffer) >= int(d.DestinationConfig.BufferSize) {
 		err := d.Flush(ctx)
 		if err != nil {
 			return err

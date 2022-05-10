@@ -18,12 +18,15 @@ package config
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/conduitio/conduit-connector-google-sheets/config"
 )
 
 const (
 	KeySheetRange = "sheet_range"
+
+	KeyBufferSize = "buffer_size"
 
 	// This could be RAW or USER_ENTERED
 	KeyValueInputOption = "value_input_option"
@@ -33,6 +36,8 @@ const (
 
 	// This could be INSERT_ROWS or OVERWRITE
 	DefaultKeyInsertDataOption = "INSERT_ROWS"
+
+	maxBufferSize uint64 = 10
 )
 
 type Config struct {
@@ -40,6 +45,7 @@ type Config struct {
 	SheetRange       string
 	ValueInputOption string
 	InsertDataOption string
+	BufferSize       uint64
 }
 
 func Parse(cfg map[string]string) (Config, error) {
@@ -63,11 +69,34 @@ func Parse(cfg map[string]string) (Config, error) {
 		sheetDataOption = DefaultKeyInsertDataOption
 	}
 
+	bufferSizeString, exists := cfg[KeyBufferSize]
+	if !exists || bufferSizeString == "" {
+		bufferSizeString = fmt.Sprintf("%d", maxBufferSize)
+	}
+
+	bufferSize, err := strconv.ParseUint(bufferSizeString, 10, 64)
+	if err != nil {
+		return Config{}, fmt.Errorf(
+			"%q config value should be a positive integer",
+			KeyBufferSize,
+		)
+	}
+
+	if bufferSize > maxBufferSize {
+		return Config{}, fmt.Errorf(
+			"%q config value should not be bigger than %d, got %d",
+			KeyBufferSize,
+			maxBufferSize,
+			bufferSize,
+		)
+	}
+
 	destinationConfig := Config{
 		Config:           sharedConfig,
 		SheetRange:       sheetRange,
 		ValueInputOption: sheetValueInput,
 		InsertDataOption: sheetDataOption,
+		BufferSize:       bufferSize,
 	}
 
 	return destinationConfig, nil
