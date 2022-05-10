@@ -211,7 +211,6 @@ func (c *SheetsIterator) getSheetRecords(ctx context.Context) ([]sdk.Record, err
 			RowOffset: rowOffset,
 		}
 
-		c.rowOffset = int64(index)
 		records = append(records, sdk.Record{
 			Position:  lastRowPosition.RecordPosition(),
 			Metadata:  nil,

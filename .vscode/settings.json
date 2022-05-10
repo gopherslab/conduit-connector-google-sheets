@@ -1,7 +1,0 @@
-{
-    "yaml.schemas": {
-        "file:///home/gaurav/.vscode/extensions/atlassian.atlascode-2.10.12/resources/schemas/pipelines-schema.json": "bitbucket-pipelines.yml",
-        "https://json.schemastore.org/github-issue-config.json": "file:///home/gaurav/Documents/conduit-connector-s3/.github/ISSUE_TEMPLATE/config.yml",
-        "https://json.schemastore.org/github-workflow.json": "file:///home/gaurav/go/src/github.com/conduit-connector-google-sheets/.github/workflows/build.yml"
-    }
-}
