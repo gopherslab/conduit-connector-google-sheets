@@ -40,3 +40,33 @@ The config passed to `Configure` can contain the following fields.
 
 * At a time, only one `sheet_id` can be used to fetch the records from the google-sheet.
 * Any modification/update/delete made to a previous row(s) in google-sheet, after the records are fetched will not be visible in the next api hit.
+
+
+## Google-Sheet Destination
+
+The Google-Sheet Destination connector connects to the provided Google SheetID with the provided configurations, using `access_token`, `refresh_token`, `spreadsheet_id`, `sheet_range`, `value_input_option`.  Then will call `Configure` to parse the configurations, If parsing was not successful, then an error will occur. After that, the Open method is called to start the connection. 
+
+
+### Google-Sheet Writer
+
+The destination writer maintains a buffer of length 4, or each time `WriteAsyn` is called, a new record is added to the buffer. When the buffer is full, all the records from it will be written/appended to the last row of google-sheets and an ack function will be called for each record after being written.
+
+
+### Configuration
+
+The config passed to `Configure` can contain the following fields.
+
+
+| name                  | description                                                                            | required  | example             |
+|-----------------------|----------------------------------------------------------------------------------------|-----------|---------------------|
+| `access_key`     |  Google Oauth2 Access Token                                                                    | yes       | "ACCESS_TOKEN" |
+| `refresh_token` | Google Oauth2 Refresh Token                                                                   | yes       | "REFRESH_TOKEN" |
+| `spreadsheet_id`          | Spreadsheet ID                                                                | yes       | "SPREADSHEET_ID"         |
+| `sheet_range`          | Sheet name on which the data is to be appended.                                                                  | yes       | "SHEET_NAME"       |
+| `value_input_option`       | How the data is being provided to google-sheets (i.e either `RAW` or `USER_ENTERED`)  | yes        | "VALUE_INPUT_OPTION"            |
+| `insert_data_option`       | How the data be inserted in google-sheets   | no        | "INSERT_DATA_OPTION"            |
+
+
+* Note: 
+The default value for `VALUE_INPUT_OPTION` is `USER_ENTERED`
+The default value for `INSERT_DATA_OPTION` is `INSERT_ROWS`
