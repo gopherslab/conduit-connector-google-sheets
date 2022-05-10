@@ -62,6 +62,11 @@ The config passed to `Configure` can contain the following fields.
 | `access_key`     |  Google Oauth2 Access Token                                                                    | yes       | "ACCESS_TOKEN" |
 | `refresh_token` | Google Oauth2 Refresh Token                                                                   | yes       | "REFRESH_TOKEN" |
 | `spreadsheet_id`          | Spreadsheet ID                                                                | yes       | "SPREADSHEET_ID"         |
-| `sheet_range`          | Unique ID(integer value) for every sheet (i.e gid in the url)                                                                  | yes       | "SHEET_NAME"       |
-| `value_input_option`       | time interval between two consecutive hits. Can be in format as s for seconds, m for minutes, h for hours (for eg: 2s; 2m; 2h)  | yes        | "USER_ENTERED"            |
-| `insert_data_option`       | time interval between two consecutive hits. Can be in format as s for seconds, m for minutes, h for hours (for eg: 2s; 2m; 2h)  | no        | "INSERT_ROWS"            |
+| `sheet_range`          | Sheet name on which the data is to be appended.                                                                  | yes       | "SHEET_NAME"       |
+| `value_input_option`       | How the data is being provided to google-sheets (i.e either `RAW` or `USER_ENTERED`)  | yes        | "VALUE_INPUT_OPTION"            |
+| `insert_data_option`       | How the data be inserted in google-sheets   | no        | "INSERT_DATA_OPTION"            |
+
+
+* Note: 
+`The default value for VALUE_INPUT_OPTION is USER_ENTERED`
+`The default value for INSERT_DATA_OPTION is INSERT_ROWS`
