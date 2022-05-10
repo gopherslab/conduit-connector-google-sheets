@@ -32,7 +32,7 @@ func TestParse(t *testing.T) {
 		{
 			testCase: "Checking against default values",
 			params: map[string]string{
-				"sheet_id":           "",
+				"sheet_id":       "",
 				"polling_period": "2m",
 			},
 			expected: Config{},
@@ -47,11 +47,11 @@ func TestParse(t *testing.T) {
 		{
 			testCase: "Checking against default values",
 			params: map[string]string{
-				"sheet_id":           "22",
+				"sheet_id":       "22",
 				"polling_period": "",
 			},
 			expected: Config{
-				GoogleSheetID:     22,
+				GoogleSheetID: 22,
 				PollingPeriod: 3 * time.Minute,
 			},
 		},
@@ -61,14 +61,14 @@ func TestParse(t *testing.T) {
 				"sheet_id": "32",
 			},
 			expected: Config{
-				GoogleSheetID:     32,
+				GoogleSheetID: 32,
 				PollingPeriod: 3 * time.Minute,
 			},
 		},
 		{
 			testCase: "Checking against default values",
 			params: map[string]string{
-				"sheet_id":           "",
+				"sheet_id":       "",
 				"polling_period": "",
 			},
 			expected: Config{},
@@ -76,7 +76,7 @@ func TestParse(t *testing.T) {
 		{
 			testCase: "Checking against if any required value is empty",
 			params: map[string]string{
-				"sheet_id":           "-1",
+				"sheet_id":       "-1",
 				"polling_period": "2m",
 			},
 			expected: Config{},
@@ -84,22 +84,22 @@ func TestParse(t *testing.T) {
 		{
 			testCase: "Checking against random values case",
 			params: map[string]string{
-				"sheet_id":           "365",
+				"sheet_id":       "365",
 				"polling_period": "2s",
 			},
 			expected: Config{
-				GoogleSheetID:     365,
+				GoogleSheetID: 365,
 				PollingPeriod: 2 * time.Second,
 			},
 		},
 		{
 			testCase: "Checking for IDEAL case - 1",
 			params: map[string]string{
-				"sheet_id":           "12",
+				"sheet_id":       "12",
 				"polling_period": "2m",
 			},
 			expected: Config{
-				GoogleSheetID:     12,
+				GoogleSheetID: 12,
 				PollingPeriod: 2 * time.Minute,
 			},
 		},

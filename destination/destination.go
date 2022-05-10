@@ -43,9 +43,8 @@ func NewDestination() sdk.Destination {
 	return &Destination{}
 }
 
-func (d *Destination) Configure(ctx context.Context, 
+func (d *Destination) Configure(ctx context.Context,
 	cfg map[string]string) error {
-
 	sheetsConfig, err := dConfig.Parse(cfg)
 	if err != nil {
 		return err
@@ -80,9 +79,8 @@ func (d *Destination) Open(context.Context) error {
 	return nil
 }
 
-func (d *Destination) WriteAsync(ctx context.Context, 
+func (d *Destination) WriteAsync(ctx context.Context,
 	r sdk.Record, ack sdk.AckFunc) error {
-
 	if d.Error != nil {
 		return d.Error
 	}
@@ -111,7 +109,7 @@ func (d *Destination) Flush(ctx context.Context) error {
 	bufferedRecords := d.Buffer
 	d.Buffer = d.Buffer[:0]
 
-	err := writer.Writer(ctx, bufferedRecords, 
+	err := writer.Writer(ctx, bufferedRecords,
 		d.DestinationConfig, d.Client)
 	if err != nil {
 		d.Error = err

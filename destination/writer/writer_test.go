@@ -49,7 +49,7 @@ func TestWriter(t *testing.T) {
 				ValueInputOption: "USER_ENTERED",
 				InsertDataOption: "INSERT_ROW",
 			},
-			client: &http.Client{},
+			client:   &http.Client{},
 			expected: [][]interface{}{},
 		},
 	}
@@ -59,11 +59,10 @@ func TestWriter(t *testing.T) {
 			err := Writer(tc.ctx, tc.r, tc.cfg, tc.client)
 			if err != nil {
 				assert.NotNil(t, err)
-			} 
+			}
 			// else {
 			// 	assert.Equal(t, tc.expected, cfg)
 			// }
 		})
 	}
-
 }
