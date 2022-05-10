@@ -17,8 +17,8 @@ package googlesheets
 
 import (
 	"github.com/conduitio/conduit-connector-google-sheets/config"
-	"github.com/conduitio/conduit-connector-google-sheets/destination"
-	"github.com/conduitio/conduit-connector-google-sheets/source"
+	dconfig "github.com/conduitio/conduit-connector-google-sheets/destination/destinationconfig"
+	sconfig "github.com/conduitio/conduit-connector-google-sheets/source/sourceconfig"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
@@ -46,18 +46,18 @@ func Specification() sdk.Specification {
 				Required:    true,
 				Description: "Google sheet id to fetch the records",
 			},
-			destination.ConfigKeySheetRange: {
+			dconfig.ConfigKeySheetRange: {
 				Default:     "",
 				Required:    true,
 				Description: "Google sheet id to fetch the records",
 			},
-			destination.ConfigKeyValueInputOption: {
+			dconfig.ConfigKeyValueInputOption: {
 				Default:     "",
 				Required:    true,
 				Description: "Google sheet id to fetch the records",
 			},
-			destination.ConfigKeyInsertDataOption: {
-				Default:     destination.DefaultKeyInsertDataOption,
+			dconfig.ConfigKeyInsertDataOption: {
+				Default:     dconfig.DefaultKeyInsertDataOption,
 				Required:    false,
 				Description: "Google sheet id to fetch the records",
 			},
@@ -78,12 +78,12 @@ func Specification() sdk.Specification {
 				Required:    true,
 				Description: "Google sheet id to fetch the records",
 			},
-			source.ConfigKeySheetID: {
+			sconfig.ConfigKeySheetID: {
 				Default:     "",
 				Required:    true,
 				Description: "Google SheetID to fetch the records from a particular SpreadsheetId",
 			},
-			source.ConfigKeyPollingPeriod: {
+			sconfig.ConfigKeyPollingPeriod: {
 				Default:     "6s",
 				Required:    false,
 				Description: "Time interval for consecutive fetching data.",

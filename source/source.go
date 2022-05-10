@@ -23,6 +23,7 @@ import (
 
 	"github.com/conduitio/conduit-connector-google-sheets/source/iterator"
 	"github.com/conduitio/conduit-connector-google-sheets/source/position"
+	sc "github.com/conduitio/conduit-connector-google-sheets/source/sourceconfig"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"golang.org/x/oauth2"
@@ -33,7 +34,7 @@ type Source struct {
 
 	client     *http.Client
 	iterator   Iterator
-	configData Config
+	configData sc.Config
 }
 
 type Iterator interface {
@@ -48,7 +49,7 @@ func NewSource() sdk.Source {
 
 // Configure validates the passed config and prepares the source connector
 func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
-	sheetsConfig, err := Parse(cfg)
+	sheetsConfig, err := sc.Parse(cfg)
 	if err != nil {
 		return err
 	}
