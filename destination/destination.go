@@ -54,6 +54,7 @@ func (d *Destination) Configure(ctx context.Context,
 	d.DestinationConfig = dConfig.Config{
 		Config:           sheetsConfig.Config,
 		SheetRange:       sheetsConfig.SheetRange,
+		BufferSize:       sheetsConfig.BufferSize,
 		ValueInputOption: sheetsConfig.ValueInputOption,
 		InsertDataOption: sheetsConfig.InsertDataOption,
 	}
@@ -129,6 +130,9 @@ func (d *Destination) Flush(ctx context.Context) error {
 }
 
 func (d *Destination) Teardown(ctx context.Context) error {
+	d.Mutex.Lock()
+	defer d.Mutex.Unlock()
+	d.Flush(ctx)
 	d.Client = nil
 	return nil
 }
