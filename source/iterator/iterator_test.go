@@ -138,7 +138,6 @@ func TestGetSheetRecords(t *testing.T) {
 			assert.Equal(t, test.expected, test.record)
 		}
 	})
-
 }
 
 type testHandler struct {
