@@ -61,9 +61,6 @@ func TestWriter(t *testing.T) {
 			if err != nil {
 				assert.NotNil(t, err)
 			}
-			// else {
-			// 	assert.Equal(t, tc.expected, cfg)
-			// }
 		})
 	}
 }
