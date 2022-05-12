@@ -68,7 +68,7 @@ The config passed to `Configure` can contain the following fields.
 | `sheet_range`          | Sheet name on which the data is to be appended.                                                                  | yes       | "SHEET_NAME"       |
 | `value_input_option`       | How the data is being provided to google-sheets (i.e either `RAW` or `USER_ENTERED`)  | yes        | "VALUE_INPUT_OPTION"            |
 | `insert_data_option`       | How the data be inserted in google-sheets   | no        | "INSERT_DATA_OPTION"            |
-| `buffer_size`          | Minumun number of records in buffer to hit the google-sheet api                                                                 | yes       | "Buffer"
+| `buffer_size`          | Minumun number of records in buffer to hit the google-sheet api                                                                 | no       | "Buffer"
 
 
 * Note: 
