@@ -29,11 +29,12 @@ The config passed to `Configure` can contain the following fields.
 
 | name                  | description                                                                            | required  | example             |
 |-----------------------|----------------------------------------------------------------------------------------|-----------|---------------------|
-| `access_key`     |  Google Oauth2 Access Token                                                                    | yes       | "ACCESS_TOKEN" |
-| `refresh_token` | Google Oauth2 Refresh Token                                                                   | yes       | "REFRESH_TOKEN" |
-| `spreadsheet_id`          | Spreadsheet ID                                                                | yes       | "SPREADSHEET_ID"         |
-| `sheet_id`          | Unique ID(integer value) for every sheet (i.e gid in the url)                                                                  | yes       | 0       |
-| `iteration_interval`       | time interval between two consecutive hits. Can be in format as s for seconds, m for minutes, h for hours (for eg: 2s; 2m; 2h)  | no        | "2m"            |
+| `gsheets.accessToken`     |  Google Oauth2 Access Token                                                                    | yes       | "ACCESS_TOKEN" |
+| `gsheets.refreshToken` | Google Oauth2 Refresh Token                                                                   | yes       | "REFRESH_TOKEN" |
+| `gsheets.expiry`          | Expiry of the google access token                                                                 | yes       | "TOKEN_EXPIRY"         |
+| `gsheets.spreadsheetId`          | Spreadsheet ID                                                                  | yes       | 0       |
+| `sheet_id`          | Unique ID(integer value) for every sheet (i.e gid that can br found at the end of  the url)                                                                  | yes       | 0       |
+| `polling_period`       | time interval between two consecutive hits. Can be in format as s for seconds, m for minutes, h for hours (for eg: 2s; 2m; 2h)  | no        | "6s"            |
 
 
 ### Known Limitations
@@ -68,5 +69,8 @@ The config passed to `Configure` can contain the following fields.
 
 
 * Note: 
-The default value for `VALUE_INPUT_OPTION` is `USER_ENTERED`
+The default value for `VALUE_INPUT_OPTION` is `USER_ENTERED`\n
 The default value for `INSERT_DATA_OPTION` is `INSERT_ROWS`
+
+
+### Known Limitations

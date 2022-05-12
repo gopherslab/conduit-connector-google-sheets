@@ -13,22 +13,20 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
 package iterator
 
 import (
 	"context"
-	"encoding/base64"
 	"errors"
 	"net/http"
-	"net/http/httptest"
-	"net/url"
 	"testing"
 	"time"
 
 	"github.com/conduitio/conduit-connector-google-sheets/config"
 	sourceConfig "github.com/conduitio/conduit-connector-google-sheets/source/config"
 	"github.com/conduitio/conduit-connector-google-sheets/source/position"
+	"golang.org/x/oauth2"
+
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/tomb.v2"
@@ -42,54 +40,45 @@ func TestNewSheetsIterator(t *testing.T) {
 		isError bool
 	}{
 		{
-			name: "NewSheetsIterator with lastModifiedTime=0",
+			name: "NewSheetsIterator with RowOffset=0",
 			config: sourceConfig.Config{
 				Config: config.Config{
-					GoogleAccessToken:   "",
-					GoogleSpreadsheetID: "",
+					GoogleAccessToken:   "ACCESS_TOKEN",
+					GoogleSpreadsheetID: "SPREADSHEET_ID",
 					TokenExpiry:         time.Time{},
-					AuthRefreshToken:    "",
+					AuthRefreshToken:    "REFRESH_TOKEN",
 				},
+				GoogleSheetID: 0,
 				PollingPeriod: time.Millisecond,
 			},
 			tp: position.SheetPosition{RowOffset: 0},
 		}, {
-			name: "NewSheetsIterator with lastModifiedTime=2022-01-02T15:04:05Z",
+			name: "NewSheetsIterator without SheetID",
 			config: sourceConfig.Config{
 				Config: config.Config{
-					GoogleAccessToken:   "",
-					GoogleSpreadsheetID: "",
+					GoogleAccessToken:   "ACCESS_TOKEN",
+					GoogleSpreadsheetID: "SPREADSHEET_ID",
 					TokenExpiry:         time.Time{},
-					AuthRefreshToken:    "",
+					AuthRefreshToken:    "REFRESH_TOKEN",
 				},
 				PollingPeriod: time.Millisecond,
 			},
 			tp: position.SheetPosition{
-				// LastModified: time.Date(2022, 01, 02,
-				// 	15, 04, 05, 0, time.UTC),
-				RowOffset: 0,
+				RowOffset: 5,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			res, err := NewSheetsIterator(context.Background(), tt.config, tt.tp)
+			res, err := NewSheetsIterator(context.Background(), &http.Client{}, tt.tp, "SPREADSHEET_ID", 0, tt.config.PollingPeriod)
 			if tt.isError {
 				assert.NotNil(t, err)
 			} else {
 				assert.NotNil(t, res)
-				// assert.Equal(t, tt.config.UserName, res.userName)
-				// assert.Equal(t, tt.config.APIToken, res.apiToken)
-				// assert.Equal(t, res.baseURL, "https://testlab.zendesk.com")
 				assert.NotNil(t, res.caches)
 				assert.NotNil(t, res.buffer)
 				assert.NotNil(t, res.tomb)
 				assert.NotNil(t, res.ticker)
-				// expectedTime := tt.tp.LastModified.Unix()
-				// if expectedTime < 0 {
-				// 	expectedTime = 0
-				// }
-				// assert.Equal(t, expectedTime, res.lastModifiedTime.Unix())
 			}
 		})
 	}
@@ -121,29 +110,44 @@ func TestFlush(t *testing.T) {
 	}
 }
 
-func TestFetchRecords(t *testing.T) {
-	th := &testHandler{
-		t:          t,
-		url:        &url.URL{Host: "", Path: "/api/v2/incremental/tickets/cursor.json", RawQuery: "start_time=1"},
-		statusCode: 200,
-		resp:       []byte(`{"after_url":"something","tickets":[{"id":1,"updated_at":"2022-05-08T05:49:55Z","created_at":"2022-05-08T05:49:55Z"}]}`),
-		username:   "dummy_user",
-		apiToken:   "dummy_token",
+func TestGetSheetRecords(t *testing.T) {
+	ctx := context.Background()
+	token := &oauth2.Token{
+		AccessToken:  "ACCESS_TOKEN",
+		TokenType:    "Bearer",
+		RefreshToken: "REFRESH_TOKEN",
+		Expiry:       time.Time{},
 	}
-	testServer := httptest.NewServer(th)
+
+	var authCfg *oauth2.Config
+	gclient := authCfg.Client(ctx, token)
+
 	cdc := &SheetsIterator{
 		sheetID:       0,
-		spreadsheetID: "",
+		spreadsheetID: "1ANUB)NS*765%L-NDB",
 		rowOffset:     0,
-		client:        &http.Client{},
+		client:        gclient,
 	}
-	ctx := context.Background()
-	recs, err := cdc.getSheetRecords(ctx)
-	assert.NoError(t, err)
-	assert.Len(t, recs, 1)
+
+	test := testHandler{}
+
+	t.Run("", func(t *testing.T) {
+		recs, _ := cdc.getSheetRecords(ctx)
+		if test.isError {
+			assert.Len(t, recs, 1)
+			assert.Equal(t, test.expected, test.record)
+		}
+	})
+
 }
 
-func TestFetchRecords_RateLimit(t *testing.T) {
+type testHandler struct {
+	record   []sdk.Record
+	isError  bool
+	expected []sdk.Record
+}
+
+func TestGetSheetRecords_RateLimit(t *testing.T) {
 	// in case of nextRun being set later than now, no processing should occur
 	cdc := &SheetsIterator{
 		nextRun: time.Now().Add(time.Minute),
@@ -153,75 +157,36 @@ func TestFetchRecords_RateLimit(t *testing.T) {
 	assert.Nil(t, recs)
 }
 
-func TestFetchRecords_429(t *testing.T) {
-	header := http.Header{}
-	header.Set("Retry_After", "93")
-	th := &testHandler{
-		t:          t,
-		url:        &url.URL{Path: "/api/v2/incremental/tickets/cursor.json", RawQuery: "cursor=some_dummy"},
-		statusCode: 429,
-		resp:       []byte(``),
-		username:   "dummy_user",
-		apiToken:   "dummy_token",
-		header:     header,
-	}
-	testServer := httptest.NewServer(th)
-	cdc := &SheetsIterator{
-		sheetID:       0,
-		spreadsheetID: "",
-		rowOffset:     0,
-		client:        &http.Client{},
-	}
-	ctx := context.Background()
-	recs, err := cdc.getSheetRecords(ctx)
-	assert.NoError(t, err)
-	assert.Len(t, recs, 0)
-	assert.GreaterOrEqual(t, cdc.nextRun.Unix(), time.Now().Add(90*time.Second).Unix())
-}
+// func TestFetchRecords_429(t *testing.T) {
+// 	header := http.Header{}
+// 	header.Set("Retry_After", "93")
+// 	th := &testHandler{
+// 		t:             t,
+// 		resp:          []byte(``),
+// 		sheetID:       0,
+// 		spreadsheetID: "",
+// 	}
+// 	testServer := httptest.NewServer(th)
+// 	cdc := &SheetsIterator{
+// 		sheetID:       0,
+// 		spreadsheetID: "",
+// 		rowOffset:     0,
+// 		client:        &http.Client{},
+// 	}
+// 	ctx := context.Background()
+// 	recs, err := cdc.getSheetRecords(ctx)
+// 	assert.NoError(t, err)
+// 	assert.Len(t, recs, 0)
+// 	assert.GreaterOrEqual(t, cdc.nextRun.Unix(), time.Now().Add(90*time.Second).Unix())
+// }
 
-func TestFetchRecords_500(t *testing.T) {
-	th := &testHandler{
-		t:          t,
-		url:        &url.URL{Path: "/api/v2/incremental/tickets/cursor.json", RawQuery: "cursor=some_dummy"},
-		statusCode: 500,
-		resp:       []byte(``),
-		username:   "dummy_user",
-		apiToken:   "dummy_token",
-	}
-	testServer := httptest.NewServer(th)
-	cdc := &SheetsIterator{
-		sheetID:       0,
-		spreadsheetID: "",
-		rowOffset:     0,
-		client:        &http.Client{},
-	}
-	ctx := context.Background()
-	recs, err := cdc.getSheetRecords(ctx)
-	assert.EqualError(t, err, "non 200 status code received(500)")
-	assert.Len(t, recs, 0)
-}
-
-type testHandler struct {
-	t          *testing.T
-	url        *url.URL
-	statusCode int
-	header     http.Header
-	resp       []byte
-	username   string
-	apiToken   string
-}
-
-func (t *testHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	assert.Equal(t.t, t.url.Path, r.URL.Path)
-	assert.Equal(t.t, t.url.RawQuery, r.URL.RawQuery)
-
-	assert.Equal(t.t, "Basic "+base64.StdEncoding.EncodeToString([]byte(t.username+"/token:"+t.apiToken)), r.Header.Get("Authorization"))
-	for key, val := range t.header {
-		w.Header().Set(key, val[0])
-	}
-	w.WriteHeader(t.statusCode)
-	_, _ = w.Write(t.resp)
-}
+// type testHandler struct {
+// 	t             *testing.T
+// 	client        *http.Client
+// 	resp          []byte
+// 	sheetID       int64
+// 	spreadsheetID string
+// }
 
 func TestNext(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
