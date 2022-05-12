@@ -50,7 +50,7 @@ The Google-Sheet Destination connector connects to the provided Google SheetID w
 
 ### Google-Sheet Writer
 
-The destination writer maintains a buffer of length 4, or each time `WriteAsyn` is called, a new record is added to the buffer. When the buffer is full, all the records from it will be written/appended to the last row of google-sheets and an ack function will be called for each record after being written.
+The destination writer maintains a configurable buffer(default length is 10), or each time `WriteAsync` is called, a new record is added to the buffer. When the buffer is full, all the records from it will be written/appended to the last row of google-sheets and an ack function will be called for each record after being written.
 
 
 ### Configuration
@@ -60,17 +60,18 @@ The config passed to `Configure` can contain the following fields.
 
 | name                  | description                                                                            | required  | example             |
 |-----------------------|----------------------------------------------------------------------------------------|-----------|---------------------|
-| `access_key`     |  Google Oauth2 Access Token                                                                    | yes       | "ACCESS_TOKEN" |
-| `refresh_token` | Google Oauth2 Refresh Token                                                                   | yes       | "REFRESH_TOKEN" |
-| `spreadsheet_id`          | Spreadsheet ID                                                                | yes       | "SPREADSHEET_ID"         |
+| `gsheets.accessToken`     |  Google Oauth2 Access Token                                                                    | yes       | "ACCESS_TOKEN" |
+| `gsheets.refreshToken` | Google Oauth2 Refresh Token                                                                   | yes       | "REFRESH_TOKEN" |
+| `gsheets.refreshToken` | Google Oauth2 Refresh Token                                                                   | yes       | "REFRESH_TOKEN" |
+| `gsheets.expiry`          | Expiry of the google access token                                                                 | yes       | "TOKEN_EXPIRY"         |
+| `gsheets.spreadsheetId`          | Spreadsheet ID                                                                | yes       | "SPREADSHEET_ID"         |
 | `sheet_range`          | Sheet name on which the data is to be appended.                                                                  | yes       | "SHEET_NAME"       |
 | `value_input_option`       | How the data is being provided to google-sheets (i.e either `RAW` or `USER_ENTERED`)  | yes        | "VALUE_INPUT_OPTION"            |
 | `insert_data_option`       | How the data be inserted in google-sheets   | no        | "INSERT_DATA_OPTION"            |
+| `buffer_size`          | Minumun number of records in buffer to hit the google-sheet api                                                                 | yes       | "Buffer"
 
 
 * Note: 
-The default value for `VALUE_INPUT_OPTION` is `USER_ENTERED`\n
+The default value for `VALUE_INPUT_OPTION` is `USER_ENTERED`
+
 The default value for `INSERT_DATA_OPTION` is `INSERT_ROWS`
-
-
-### Known Limitations
