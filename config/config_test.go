@@ -22,8 +22,8 @@ import (
 )
 
 func TestParse(t *testing.T) {
-	validCredFile := "../testdata/dummy_cred.json"
-	invalidCredFile := "../testdata/dummy_invalid_cred.json"
+	validCredFile := "../testdata/dummy_cred.json"           // nolint: gosec // not valid creds
+	invalidCredFile := "../testdata/dummy_invalid_cred.json" // nolint: gosec // not valid creds
 	tests := []struct {
 		name   string
 		config map[string]string

@@ -19,10 +19,11 @@ package source
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	sc "github.com/conduitio/conduit-connector-google-sheets/source/config"
 	"github.com/conduitio/conduit-connector-google-sheets/source/iterator"
 	"github.com/conduitio/conduit-connector-google-sheets/source/position"
-	"net/http"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )

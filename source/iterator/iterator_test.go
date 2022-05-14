@@ -43,12 +43,8 @@ func TestNewSheetsIterator(t *testing.T) {
 			name: "NewSheetsIterator with RowOffset=0",
 			config: sourceConfig.Config{
 				Config: config.Config{
-					GoogleAccessToken:   "ACCESS_TOKEN",
 					GoogleSpreadsheetID: "SPREADSHEET_ID",
-					TokenExpiry:         time.Time{},
-					AuthRefreshToken:    "REFRESH_TOKEN",
 				},
-				GoogleSheetID: 0,
 				PollingPeriod: time.Millisecond,
 			},
 			tp: position.SheetPosition{RowOffset: 0},
@@ -56,10 +52,7 @@ func TestNewSheetsIterator(t *testing.T) {
 			name: "NewSheetsIterator without SheetID",
 			config: sourceConfig.Config{
 				Config: config.Config{
-					GoogleAccessToken:   "ACCESS_TOKEN",
 					GoogleSpreadsheetID: "SPREADSHEET_ID",
-					TokenExpiry:         time.Time{},
-					AuthRefreshToken:    "REFRESH_TOKEN",
 				},
 				PollingPeriod: time.Millisecond,
 			},

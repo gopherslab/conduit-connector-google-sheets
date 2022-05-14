@@ -20,12 +20,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 	"io/ioutil"
 	"net/http"
 	"regexp"
 	"strconv"
+
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
 const (
@@ -73,7 +74,7 @@ func Parse(config map[string]string) (Config, error) {
 		return Config{}, fmt.Errorf("unable to read client secret file: %w", err)
 	}
 
-	oauthConfig, err := google.ConfigFromJSON(credBytes)
+	oauthConfig, err := google.ConfigFromJSON(credBytes, scopes...)
 	if err != nil {
 		return Config{}, fmt.Errorf("unable to parse client secret file to config: %w", err)
 	}

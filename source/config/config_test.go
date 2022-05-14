@@ -14,13 +14,14 @@ limitations under the License.
 */
 package config
 
-type sourceTestCase []struct {
-	testCase string
-	params   map[string]string
-	expected Config
-}
+//
+// type sourceTestCase []struct {
+//	testCase string
+//	params   map[string]string
+//	expected Config
+//}
 
-//func TestParse(t *testing.T) {
+// func TestParse(t *testing.T) {
 //	cases := sourceTestCase{
 //		{
 //			testCase: "Checking against default values",

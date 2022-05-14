@@ -42,8 +42,6 @@ func TestWriter(t *testing.T) {
 			r:        []sdk.Record{},
 			cfg: destConfig.Config{
 				Config: config.Config{
-					GoogleAccessToken:   "access-token here",
-					AuthRefreshToken:    "refresh-token here",
 					GoogleSpreadsheetID: "123abcd",
 				},
 				SheetRange:       "Sheet",

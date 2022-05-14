@@ -119,7 +119,6 @@ func (c *SheetsIterator) flush() error {
 				case <-c.tomb.Dying():
 					return c.tomb.Err()
 				}
-
 			}
 		}
 	}
@@ -200,7 +199,6 @@ func (c *SheetsIterator) getSheetRecords(ctx context.Context) ([]sdk.Record, err
 
 	records := make([]sdk.Record, 0, len(responseData))
 	for index, val := range responseData {
-
 		rawData, err := json.Marshal(val)
 		if err != nil {
 			return records, fmt.Errorf("error marshaling the map: %w", err)
