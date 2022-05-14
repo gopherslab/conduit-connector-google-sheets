@@ -75,7 +75,7 @@ func TestAcceptance(t *testing.T) {
 func TestSource_Read_Success(t *testing.T) {
 	sheetService, err := sheets.NewService(context.Background(), option.WithHTTPClient(&http.Client{}))
 	if err != nil {
-		fmt.Errorf("error creating sheet client: %w", err)
+		fmt.Printf("error creating sheet client: %v", err)
 		return
 	}
 
@@ -96,7 +96,7 @@ func TestSource_Read_Success(t *testing.T) {
 	}
 	res, err := sheetService.Spreadsheets.Values.BatchGetByDataFilter("spreadsheetID", rbt).Context(context.Background()).Do()
 	if err != nil {
-		fmt.Errorf("error response from sheetsAPI: %w", err)
+		fmt.Printf("error response from sheetsAPI: %v", err)
 		return
 	}
 	valueRange := res.ValueRanges[0].ValueRange
@@ -115,7 +115,7 @@ func TestSource_Read_Success(t *testing.T) {
 	for index, val := range responseData {
 		rawData, err := json.Marshal(val)
 		if err != nil {
-			fmt.Errorf("error marshaling the map: %w", err)
+			fmt.Printf("error marshaling the map: %v", err)
 			return
 		}
 		rowOffset := rowOffset + int64(index) + 1
@@ -133,6 +133,9 @@ func TestSource_Read_Success(t *testing.T) {
 		})
 	}
 
+	// All the records sent to the conduit server
+	fmt.Printf("Records sent to conduit; %v", records)
+
 }
 
 func TestDestination_Write_Success(t *testing.T) {
@@ -143,7 +146,7 @@ func TestDestination_Write_Success(t *testing.T) {
 		rowArr := make([]interface{}, 0)
 		err := json.Unmarshal(dataValue.Payload.Bytes(), &rowArr)
 		if err != nil {
-			fmt.Errorf("unable to marshal the record %w", err)
+			fmt.Printf("unable to marshal the record %v", err)
 			return
 		}
 		dataFormat = append(dataFormat, rowArr)
@@ -151,7 +154,7 @@ func TestDestination_Write_Success(t *testing.T) {
 
 	sheetService, err := sheets.NewService(context.Background(), option.WithHTTPClient(&http.Client{}))
 	if err != nil {
-		fmt.Errorf("unable to create google-sheet service %w", err)
+		fmt.Printf("unable to create google-sheet service %v", err)
 		return
 	}
 
@@ -168,7 +171,7 @@ func TestDestination_Write_Success(t *testing.T) {
 		"InsertDataOption").Context(context.Background()).Do()
 
 	if err != nil {
-		fmt.Errorf("error pushing records to google-sheets %w", err)
+		fmt.Printf("error pushing records to google-sheets %v", err)
 		return
 	}
 
