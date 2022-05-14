@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package googlesheets
 
 import (
@@ -30,21 +31,22 @@ func Specification() sdk.Specification {
 		Summary:     "Google Sheets plugin",
 		Description: "A plugin capable of fetching records (in JSON format) from google spreadsheet.",
 		Version:     "v0.1.0",
-		Author:      "Meroxa, Inc.",
+		Author:      "Gophers Lab Technologies Pvt Ltd",
 		DestinationParams: map[string]sdk.Parameter{
-			config.KeyGoogleAccessToken: {
+			config.KeyCredentialsFile: {
 				Default:     "",
 				Required:    true,
-				Description: "Google sign-in access token",
-			}, config.KeyRefreshToken: {
-				Default:     "",
-				Required:    true,
-				Description: "Google sign-in access token",
+				Description: "path to credentials.json file used",
 			},
-			config.KeyGoogleSpreadsheetID: {
+			config.KeyTokensFile: {
 				Default:     "",
 				Required:    true,
-				Description: "Google sheet id to fetch the records",
+				Description: "path to token.json file containing a json with atleast refresh_token.",
+			},
+			config.KeySheetURL: {
+				Default:     "",
+				Required:    true,
+				Description: "Google sheet url to fetch the records from",
 			},
 			dconfig.KeySheetRange: {
 				Default:     "",
@@ -63,25 +65,20 @@ func Specification() sdk.Specification {
 			},
 		},
 		SourceParams: map[string]sdk.Parameter{
-			config.KeyGoogleAccessToken: {
+			config.KeyCredentialsFile: {
 				Default:     "",
 				Required:    true,
-				Description: "Google sign-in access token",
+				Description: "path to credentials.json file used",
 			},
-			config.KeyRefreshToken: {
+			config.KeyTokensFile: {
 				Default:     "",
 				Required:    true,
-				Description: "Google sign-in access token",
+				Description: "path to token.json file containing a json with atleast refresh_token.",
 			},
-			config.KeyGoogleSpreadsheetID: {
+			config.KeySheetURL: {
 				Default:     "",
 				Required:    true,
-				Description: "Google sheet id to fetch the records",
-			},
-			sconfig.KeySheetID: {
-				Default:     "",
-				Required:    true,
-				Description: "Google SheetID to fetch the records from a particular SpreadsheetId",
+				Description: "Google sheet url to fetch the records from",
 			},
 			sconfig.KeyPollingPeriod: {
 				Default:     "6s",

@@ -25,7 +25,6 @@ import (
 	"github.com/conduitio/conduit-connector-google-sheets/destination/writer"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
-	"golang.org/x/oauth2"
 )
 
 type Destination struct {
@@ -34,7 +33,6 @@ type Destination struct {
 	Buffer            []sdk.Record
 	AckCache          []sdk.AckFunc
 	Error             error
-	Token             *oauth2.Token
 	Client            *http.Client
 	Mutex             *sync.Mutex
 	DestinationConfig dConfig.Config
@@ -59,24 +57,17 @@ func (d *Destination) Configure(ctx context.Context,
 		InsertDataOption: sheetsConfig.InsertDataOption,
 	}
 
-	d.Token = &oauth2.Token{
-		AccessToken:  sheetsConfig.GoogleAccessToken,
-		TokenType:    "Bearer",
-		RefreshToken: sheetsConfig.AuthRefreshToken,
-	}
-
 	return nil
 }
 
-func (d *Destination) Open(context.Context) error {
+func (d *Destination) Open(ctx context.Context) error {
 	d.Mutex = &sync.Mutex{}
-	var authCfg *oauth2.Config
 
 	// initializing the buffer
 	d.Buffer = make([]sdk.Record, 0, d.DestinationConfig.BufferSize)
 	d.AckCache = make([]sdk.AckFunc, 0, d.DestinationConfig.BufferSize)
 
-	d.Client = authCfg.Client(context.Background(), d.Token)
+	d.Client = d.DestinationConfig.Client
 
 	return nil
 }
@@ -130,9 +121,13 @@ func (d *Destination) Flush(ctx context.Context) error {
 }
 
 func (d *Destination) Teardown(ctx context.Context) error {
-	d.Mutex.Lock()
-	defer d.Mutex.Unlock()
-	d.Flush(ctx)
+	if d.Mutex != nil {
+		d.Mutex.Lock()
+		defer d.Mutex.Unlock()
+		if err := d.Flush(ctx); err != nil {
+			return err
+		}
+	}
 	d.Client = nil
 	return nil
 }

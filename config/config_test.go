@@ -15,89 +15,93 @@
 package config
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-type testCase []struct {
-	testCase string
-	params   map[string]string
-	expected Config
-}
-
 func TestParse(t *testing.T) {
-	cases := testCase{
-		{
-			testCase: "Checking against default values",
-			params: map[string]string{
-				"access_token":       "",
-				"refresh_token":      "",
-				"spreadsheet_id":     "",
-				"sheet_id":           "",
-				"iteration_interval": "2m",
-			},
-			expected: Config{
-				GoogleAccessToken:   "",
-				AuthRefreshToken:    "",
-				GoogleSpreadsheetID: "",
-			},
+	validCredFile := "../testdata/dummy_cred.json"
+	invalidCredFile := "../testdata/dummy_invalid_cred.json"
+	tests := []struct {
+		name   string
+		config map[string]string
+		err    error
+		want   Config
+	}{{
+		name:   "missing required params",
+		config: map[string]string{},
+		err:    fmt.Errorf(`"google.credentialsFile" config value must be set`),
+		want:   Config{},
+	}, {
+		name: "config succeeds",
+		config: map[string]string{
+			KeyTokensFile:      validCredFile,
+			KeyCredentialsFile: validCredFile,
+			KeySheetURL:        "https://docs.google.com/spreadsheets/d/19VVe4M-j8MGw-a3B7fcJQnx5JnHjiHf9dwChUkqQ4/edit#gid=158080911",
 		},
-		{
-			testCase: "Checking against if any required value is empty",
-			params: map[string]string{
-				"access_token":       "",
-				"refresh_token":      "",
-				"spreadsheet_id":     "",
-				"sheet_id":           "-1",
-				"iteration_interval": "2m",
-			},
-			expected: Config{
-				GoogleAccessToken:   "",
-				AuthRefreshToken:    "",
-				GoogleSpreadsheetID: "",
-			},
+		err: nil,
+		want: Config{
+			Client:              nil,
+			GoogleSpreadsheetID: "19VVe4M-j8MGw-a3B7fcJQnx5JnHjiHf9dwChUkqQ4",
+			GoogleSheetID:       158080911,
 		},
-		{
-			testCase: "Checking against random values case",
-			params: map[string]string{
-				"access_token":       "asdfghjkl",
-				"refresh_token":      "qweafdfv",
-				"spreadsheet_id":     "",
-				"sheet_id":           "365",
-				"iteration_interval": "2m",
-			},
-			expected: Config{
-				GoogleAccessToken:   "asdfghjkl",
-				AuthRefreshToken:    "qweafdfv",
-				GoogleSpreadsheetID: "",
-			},
+	}, {
+		name: "missing required token file params",
+		config: map[string]string{
+			KeyCredentialsFile: validCredFile,
+			KeySheetURL:        "https://docs.google.com/spreadsheets/d/19VVe4M-j8MGw-a3B7fcJQnx5JnHjiHf9dwChUkqQ4/edit#gid=158080911",
 		},
-		{
-			testCase: "Checking for IDEAL case",
-			params: map[string]string{
-				"access_token":       "access-token here",
-				"refresh_token":      "refresh-token here",
-				"spreadsheet_id":     "123abcd",
-				"sheet_id":           "12",
-				"iteration_interval": "2m",
-			},
-			expected: Config{
-				GoogleAccessToken:   "access-token here",
-				AuthRefreshToken:    "refresh-token here",
-				GoogleSpreadsheetID: "123abcd",
-			},
+		err:  fmt.Errorf(`"google.tokensFile" config value must be set`),
+		want: Config{},
+	}, {
+		name: "missing required sheets url params",
+		config: map[string]string{
+			KeyTokensFile:      validCredFile,
+			KeyCredentialsFile: validCredFile,
 		},
+		err:  fmt.Errorf(`"google.sheetsURL" config value must be set`),
+		want: Config{},
+	}, {
+		name: "missing gid in sheets url",
+		config: map[string]string{
+			KeyTokensFile:      validCredFile,
+			KeyCredentialsFile: validCredFile,
+			KeySheetURL:        "https://docs.google.com/spreadsheets/d/19VVe4M-j8MGw-a3B7fcJQnx5JnHjiHf9dwChUkqQ4/edit",
+		},
+		err:  fmt.Errorf("invalid url passed, should match regex: \\/spreadsheets\\/d\\/([a-zA-Z0-9-_]+)\\/(.*)#gid=([0-9]+)"),
+		want: Config{},
+	}, {
+		name: "invalid file",
+		config: map[string]string{
+			KeyTokensFile:      "invalid_file.json",
+			KeyCredentialsFile: validCredFile,
+			KeySheetURL:        "https://docs.google.com/spreadsheets/d/19VVe4M-j8MGw-a3B7fcJQnx5JnHjiHf9dwChUkqQ4/edit",
+		},
+		err:  fmt.Errorf("unable to read tokens file: open invalid_file.json: no such file or directory"),
+		want: Config{},
+	}, {
+		name: "invalid creds",
+		config: map[string]string{
+			KeyTokensFile:      invalidCredFile,
+			KeyCredentialsFile: invalidCredFile,
+			KeySheetURL:        "https://docs.google.com/spreadsheets/d/19VVe4M-j8MGw-a3B7fcJQnx5JnHjiHf9dwChUkqQ4/edit",
+		},
+		err:  fmt.Errorf("unable to parse client secret file to config: oauth2/google: no credentials found"),
+		want: Config{},
+	},
 	}
-
-	for _, tc := range cases {
-		t.Run(tc.testCase, func(t *testing.T) {
-			cfg, err := Parse(tc.params)
-			if err != nil {
-				assert.NotNil(t, err)
-			} else {
-				assert.Equal(t, tc.expected, cfg)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg, err := Parse(tt.config)
+			if tt.err == nil {
+				assert.NoError(t, err)
+				tt.want.Client = cfg.Client
+				assert.Equal(t, tt.want, cfg)
+				return
 			}
+			assert.EqualError(t, err, tt.err.Error())
 		})
 	}
 }

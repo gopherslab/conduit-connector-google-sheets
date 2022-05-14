@@ -59,7 +59,7 @@ func NewSheetsIterator(ctx context.Context,
 		client:        client,
 		rowOffset:     tp.RowOffset,
 		tomb:          tmbWithCtx,
-		caches:        make(chan []sdk.Record),
+		caches:        make(chan []sdk.Record, 1),
 		buffer:        make(chan sdk.Record, 1),
 		ticker:        time.NewTicker(pollingPeriod),
 		spreadsheetID: spreadsheetID,
@@ -114,7 +114,12 @@ func (c *SheetsIterator) flush() error {
 			return c.tomb.Err()
 		case cache := <-c.caches:
 			for _, record := range cache {
-				c.buffer <- record
+				select {
+				case c.buffer <- record:
+				case <-c.tomb.Dying():
+					return c.tomb.Err()
+				}
+
 			}
 		}
 	}
@@ -155,7 +160,6 @@ func (c *SheetsIterator) getSheetRecords(ctx context.Context) ([]sdk.Record, err
 	if err != nil {
 		return nil, err
 	}
-
 	var s sheets.DataFilter
 	dataFilters := make([]*sheets.DataFilter, 0)
 	s.GridRange = &sheets.GridRange{
@@ -170,11 +174,11 @@ func (c *SheetsIterator) getSheetRecords(ctx context.Context) ([]sdk.Record, err
 		DataFilters:          dataFilters,
 		DateTimeRenderOption: dateTimeRenderOption,
 	}
-
 	res, err := sheetService.Spreadsheets.Values.BatchGetByDataFilter(c.spreadsheetID, rbt).Context(ctx).Do()
 	if err != nil {
 		return nil, err
 	}
+
 	valueRange := res.ValueRanges[0].ValueRange
 
 	if res.HTTPStatusCode == http.StatusTooManyRequests {
@@ -193,15 +197,10 @@ func (c *SheetsIterator) getSheetRecords(ctx context.Context) ([]sdk.Record, err
 	}
 
 	responseData := valueRange.Values
-	for index, value := range responseData {
-		if len(value) == 0 {
-			responseData = responseData[:index]
-			break
-		}
-	}
 
 	records := make([]sdk.Record, 0, len(responseData))
 	for index, val := range responseData {
+
 		rawData, err := json.Marshal(val)
 		if err != nil {
 			return records, fmt.Errorf("error marshaling the map: %w", err)

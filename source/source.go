@@ -19,14 +19,12 @@ package source
 import (
 	"context"
 	"fmt"
-	"net/http"
-
 	sc "github.com/conduitio/conduit-connector-google-sheets/source/config"
 	"github.com/conduitio/conduit-connector-google-sheets/source/iterator"
 	"github.com/conduitio/conduit-connector-google-sheets/source/position"
+	"net/http"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
-	"golang.org/x/oauth2"
 )
 
 type Source struct {
@@ -53,19 +51,9 @@ func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
 	if err != nil {
 		return err
 	}
-
 	s.configData = sheetsConfig
 
-	token := &oauth2.Token{
-		AccessToken:  sheetsConfig.Config.GoogleAccessToken,
-		TokenType:    "Bearer",
-		RefreshToken: sheetsConfig.Config.AuthRefreshToken,
-		Expiry:       sheetsConfig.Config.TokenExpiry, // required for refresh functionality to work
-	}
-
-	var authCfg *oauth2.Config
-	s.client = authCfg.Client(ctx, token)
-
+	s.client = s.configData.Client
 	return nil
 }
 
