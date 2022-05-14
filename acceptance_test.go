@@ -33,7 +33,7 @@ import (
 	"go.uber.org/goleak"
 )
 
-func TestAcceptance(t *testing.T){
+func TestAcceptance(t *testing.T) {
 	sourceConfig := map[string]string{
 		"gsheets.accessToken":   "access_token",
 		"gsheets.refreshToken":  "refresh_token",
