@@ -1,7 +1,7 @@
 # Conduit Connnector Google-Sheets
 
 ###  General
-The Conduit Connector for [Google-Sheets](https://github.com/gopherslab/conduit-connector-google-sheets/tree/dev) fetches all the records from a particular sheet.
+The Conduit Connector for [Google Sheets](https://github.com/gopherslab/conduit-connector-google-sheets/tree/dev) fetches all the records from a particular sheet.
 
 
 ## Google-Sheet Source
@@ -29,11 +29,9 @@ The config passed to `Configure` can contain the following fields.
 
 | name                  | description                                                                            | required  | example             |
 |-----------------------|----------------------------------------------------------------------------------------|-----------|---------------------|
-| `gsheets.accessToken`     |  Google Oauth2 Access Token                                                                    | yes       | "ACCESS_TOKEN" |
-| `gsheets.refreshToken` | Google Oauth2 Refresh Token                                                                   | yes       | "REFRESH_TOKEN" |
-| `gsheets.expiry`          | Expiry of the google access token                                                                 | yes       | "TOKEN_EXPIRY"         |
-| `gsheets.spreadsheetId`          | Spreadsheet ID                                                                  | yes       | 0       |
-| `sheet_id`          | Unique ID(integer value) for every sheet (i.e gid that can br found at the end of  the url)                                                                  | yes       | 0       |
+| `google.credentialsFile`     |  Path to credentials file which can be downloaded from Google Cloud Platform(in .json format) to authorise the user.                                                                     | yes       | "path://to/credential/file" |
+| `google.tokensFile`          | Path to file in .json format which includes the `access_token`, `token_type`, `refresh_token` and `expiry`.                                                                   | yes       | "path://to/token/file"       |
+| `google.sheetsURL`          | URL of the google spreadsheet(copy the entire url from the address bar).                                                                  | yes       | "https://docs.google.com/spreadsheets/d/dummy_spreadsheet_id/edit#gid=0"       |
 | `polling_period`       | time interval between two consecutive hits. Can be in format as s for seconds, m for minutes, h for hours (for eg: 2s; 2m; 2h)  | no        | "6s"            |
 
 
@@ -60,18 +58,13 @@ The config passed to `Configure` can contain the following fields.
 
 | name                  | description                                                                            | required  | example             |
 |-----------------------|----------------------------------------------------------------------------------------|-----------|---------------------|
-| `gsheets.accessToken`     |  Google Oauth2 Access Token                                                                    | yes       | "ACCESS_TOKEN" |
-| `gsheets.refreshToken` | Google Oauth2 Refresh Token                                                                   | yes       | "REFRESH_TOKEN" |
-| `gsheets.refreshToken` | Google Oauth2 Refresh Token                                                                   | yes       | "REFRESH_TOKEN" |
-| `gsheets.expiry`          | Expiry of the google access token                                                                 | yes       | "TOKEN_EXPIRY"         |
+| `google.credentialsFile`     |  Path to credentials file which can be downloaded from Google Cloud Platform(in .json format) to authorise the user.                                                                     | yes       | "path://to/credential/file" |
+| `google.tokensFile`          | Path to file in .json format which includes the `access_token`, `token_type`, `refresh_token` and `expiry`.                                                                   | yes       | "path://to/token/file"       |
+| `google.sheetsURL`          | URL of the google spreadsheet(copy the entire url from the address bar).                                                                  | yes       | "https://docs.google.com/spreadsheets/d/dummy_spreadsheet_id/edit#gid=0"       |
 | `gsheets.spreadsheetId`          | Spreadsheet ID                                                                | yes       | "SPREADSHEET_ID"         |
 | `sheet_range`          | Sheet name on which the data is to be appended.                                                                  | yes       | "SHEET_NAME"       |
-| `value_input_option`       | How the data is being provided to google-sheets (i.e either `RAW` or `USER_ENTERED`)  | yes        | "VALUE_INPUT_OPTION"            |
-| `insert_data_option`       | How the data be inserted in google-sheets   | no        | "INSERT_DATA_OPTION"            |
-| `buffer_size`          | Minumun number of records in buffer to hit the google-sheet api                                                                 | no       | "Buffer"
+| `value_input_option`       | How the data is being provided to google-sheets (i.e either `RAW` or `USER_ENTERED`). The default value for `VALUE_INPUT_OPTION` is `USER_ENTERED`  | yes        | "VALUE_INPUT_OPTION"            |
+| `insert_data_option`       | How the data be inserted in google-sheets(i.e either `OVERWRITE` or `INSERT_ROWS`). The default value for `INSERT_DATA_OPTION` is `INSERT_ROWS`   | no        | "INSERT_DATA_OPTION"            |
+| `buffer_size`          | Minumun number of records in buffer to hit the google-sheet api                                                                 | no       | "Buffer"            |
 
 
-* Note: 
-The default value for `VALUE_INPUT_OPTION` is `USER_ENTERED`
-
-The default value for `INSERT_DATA_OPTION` is `INSERT_ROWS`
