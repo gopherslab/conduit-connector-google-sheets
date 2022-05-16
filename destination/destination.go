@@ -104,7 +104,7 @@ func (d *Destination) WriteAsync(ctx context.Context,
 	return d.Error
 }
 
-// Flush writes the records when the buffer threshold is hit and after successful pushing the data 
+// Flush writes the records when the buffer threshold is hit and after successful pushing the data
 // empties the record buffer and acknowledgment buffer for new records.
 func (d *Destination) Flush(ctx context.Context) error {
 	bufferedRecords := d.Buffer

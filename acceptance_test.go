@@ -34,7 +34,7 @@ import (
 )
 
 func TestAcceptance(t *testing.T) {
-	validCredFile := "../testdata/dummy_cred.json"
+	validCredFile := "../testdata/dummy_cred.json" //#nosec
 	sourceConfig := map[string]string{
 		"google.credentialsFile": validCredFile,
 		"google.tokensFile":      validCredFile,

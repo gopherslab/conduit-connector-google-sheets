@@ -23,8 +23,8 @@ import (
 
 const (
 	// KeyPollingPeriod is the config name for the google-sheets polling period
-	KeyPollingPeriod     = "pollingPeriod"
-	
+	KeyPollingPeriod = "pollingPeriod"
+
 	// defaultPollingPeriod is the value assumed for the pooling period when the
 	// config omits the polling period parameter
 	defaultPollingPeriod = "6s"
