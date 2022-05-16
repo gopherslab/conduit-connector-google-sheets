@@ -34,24 +34,22 @@ import (
 )
 
 func TestAcceptance(t *testing.T) {
+	validCredFile := "../testdata/dummy_cred.json"
 	sourceConfig := map[string]string{
-		"gsheets.accessToken":   "access_token",
-		"gsheets.refreshToken":  "refresh_token",
-		"gsheets.expiry":        "expiry",
-		"gsheets.spreadsheetId": "spreadsheet_id",
-		"sheet_id":              "sheet_id",
-		"polling_period":        "6s", // Configurable polling period
+		"google.credentialsFile": validCredFile,
+		"google.tokensFile":      validCredFile,
+		"google.sheetsURL":       "https://docs.google.com/spreadsheets/d/1gQjm4hnSdrMFyPjhlwSGLBbj0ACOxFQJpVST1LmW6Hg/edit#gid=0",
+		"pollingPeriod":          "6s", // Configurable polling period
 	}
 
 	destConfig := map[string]string{
-		"gsheets.accessToken":   "access_token",
-		"gsheets.refreshToken":  "refresh_token",
-		"gsheets.expiry":        "expiry",
-		"gsheets.spreadsheetId": "spreadsheet_id",
-		"sheet_range":           "Sheet1",
-		"insert_data_option":    "INSERT_ROW",
-		"value_input_option":    "USER_ENTERED",
-		"buffer_size":           "10",
+		"google.credentialsFile": validCredFile,
+		"google.tokensFile":      validCredFile,
+		"google.sheetsURL":       "https://docs.google.com/spreadsheets/d/1gQjm4hnSdrMFyPjhlwSGLBbj0ACOxFQJpVST1LmW6Hg/edit#gid=0",
+		"sheet_range":            "Sheet2",
+		"value_input_option":     "USER_ENTERED",
+		"insert_data_option":     "INSERT_ROWS",
+		"buffer_size":            "10",
 	}
 
 	sdk.AcceptanceTest(t, sdk.ConfigurableAcceptanceTestDriver{
@@ -68,6 +66,15 @@ func TestAcceptance(t *testing.T) {
 				// these tests are skipped, because they need valid json of type map[string]string to work
 				// whereas the code generates random string payload
 				"TestSource_Open_ResumeAtPosition",
+				"TestDestination_Configure_Success",
+				"TestDestination_WriteAsync_Success",
+				"TestDestination_WriteOrWriteAsync",
+				"TestDestination_Write_Success",
+				"TestSource_Configure_Success",
+				"TestSource_Read_Success",
+				"TestSource_Read_Timeout",
+				"TestSpecifier_Specify_Success",
+				"TestSpecifier_Specify_Success/destinationParams",
 			},
 		},
 	})
@@ -137,6 +144,8 @@ func TestSource_Read_Success(t *testing.T) {
 	// All the records sent to the conduit server
 	fmt.Printf("Records sent to conduit; %v", records)
 }
+
+/*
 func TestDestination_Write_Success(t *testing.T) {
 	var dataFormat [][]interface{}
 	record := []sdk.Record{}
@@ -176,3 +185,4 @@ func TestDestination_Write_Success(t *testing.T) {
 
 	fmt.Printf("Response from sheets API: %#v", sheetResponse)
 }
+*/

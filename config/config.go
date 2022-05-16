@@ -30,12 +30,18 @@ import (
 )
 
 const (
+	// KeyCredentialsFile is the config name for Google access key
 	KeyCredentialsFile = "google.credentialsFile"
+	
+	// KeyTokensFile is the config name for google generated token file
 	KeyTokensFile      = "google.tokensFile"
+	
+	// KeySheetURL is the config name for google-sheets url
 	KeySheetURL        = "google.sheetsURL"
 )
 
 var (
+	// scopes for spreadsheets are required in order to access the google SheetAPI.
 	scopes = []string{
 		"https://www.googleapis.com/auth/spreadsheets.readonly",
 		"https://www.googleapis.com/auth/spreadsheets",
@@ -43,12 +49,14 @@ var (
 	sheetsRegexp = regexp.MustCompile(`\/spreadsheets\/d\/([a-zA-Z0-9-_]+)\/(.*)#gid=([0-9]+)`)
 )
 
+// Config represent configuration needed for google-sheets
 type Config struct {
 	Client              *http.Client
 	GoogleSpreadsheetID string
 	GoogleSheetID       int64
 }
 
+// Parse attempts to parse plugins.Config into a Config struct
 func Parse(config map[string]string) (Config, error) {
 	// check if configs exist
 	credFile, ok := config[KeyCredentialsFile]

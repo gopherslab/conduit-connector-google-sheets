@@ -24,22 +24,30 @@ import (
 )
 
 const (
+	// KeySheetRange is the name of the sheet needed to fetch data.
 	KeySheetRange = "sheet_range"
 
+	// KeyBufferSize is the config name for buffer size.
 	KeyBufferSize = "buffer_size"
 
-	// This could be RAW or USER_ENTERED
+	// KeyValueInputOption is the config name for how the input data
+	// should be interpreted. This could be RAW or USER_ENTERED
 	KeyValueInputOption = "value_input_option"
 
-	// Optional
+	// KeyValueInputOption is the config name for how the input data
+	// should be inserted. This could be INSERT_ROWS or OVERWRITE
 	KeyInsertDataOption = "insert_data_option"
 
-	// This could be INSERT_ROWS or OVERWRITE
+	// DefaultKeyInsertDataOption is the value InsertDataOption assumes when the config omits
+	// the InsertDataOption parameter
 	DefaultKeyInsertDataOption = "INSERT_ROWS"
 
+	// maxBufferSize determines maximum buffer size a config can accept.
+	// When config with bigger buffer size is parsed, an error is returned.
 	maxBufferSize uint64 = 10
 )
 
+// Config represents destination configuration with Google-Sheet configurations
 type Config struct {
 	config.Config
 	SheetRange       string
@@ -48,6 +56,7 @@ type Config struct {
 	BufferSize       uint64
 }
 
+// Parse attempts to parse the configurations into a Config struct that Destination could utilize
 func Parse(cfg map[string]string) (Config, error) {
 	sharedConfig, err := config.Parse(cfg)
 	if err != nil {

@@ -28,9 +28,12 @@ import (
 	sheets "google.golang.org/api/sheets/v4"
 )
 
+// Writer function is responsible for persisting record that Destination
+// has accumulated in its buffers.
 func Writer(ctx context.Context, record []sdk.Record, cfg dcfg.Config, client *http.Client) error {
 	var dataFormat [][]interface{}
 
+	// Looping on every record and unmarhsalling to google-sheets format.
 	for _, dataValue := range record {
 		rowArr := make([]interface{}, 0)
 		err := json.Unmarshal(dataValue.Payload.Bytes(), &rowArr)
@@ -45,6 +48,7 @@ func Writer(ctx context.Context, record []sdk.Record, cfg dcfg.Config, client *h
 		return fmt.Errorf("unable to create google-sheet service %w", err)
 	}
 
+	// Creating a google-sheet format to append to google-sheet
 	sheetValueFormat := &sheets.ValueRange{
 		MajorDimension: "ROWS",
 		Range:          cfg.SheetRange,

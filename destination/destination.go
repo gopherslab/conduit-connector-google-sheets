@@ -27,6 +27,7 @@ import (
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
+// Destination connector
 type Destination struct {
 	sdk.UnimplementedDestination
 
@@ -42,6 +43,7 @@ func NewDestination() sdk.Destination {
 	return &Destination{}
 }
 
+// Configure parses and initializes the config.
 func (d *Destination) Configure(ctx context.Context,
 	cfg map[string]string) error {
 	sheetsConfig, err := dConfig.Parse(cfg)
@@ -60,6 +62,7 @@ func (d *Destination) Configure(ctx context.Context,
 	return nil
 }
 
+// Open makes sure everything is prepared to receive records.
 func (d *Destination) Open(ctx context.Context) error {
 	d.Mutex = &sync.Mutex{}
 
@@ -72,6 +75,9 @@ func (d *Destination) Open(ctx context.Context) error {
 	return nil
 }
 
+// WriteAsync writes a record into a Destination. Typically Destination maintains an in-memory
+// buffer and doesn't actually perform a write until the buffer has enough
+// records in it. This is done for performance reasons.
 func (d *Destination) WriteAsync(ctx context.Context,
 	r sdk.Record, ack sdk.AckFunc) error {
 	if d.Error != nil {
@@ -98,6 +104,8 @@ func (d *Destination) WriteAsync(ctx context.Context,
 	return d.Error
 }
 
+// Flush writes the records when the buffer threshold is hit and after successful pushing the data 
+// empties the record buffer and acknowledgment buffer for new records.
 func (d *Destination) Flush(ctx context.Context) error {
 	bufferedRecords := d.Buffer
 	d.Buffer = d.Buffer[:0]
@@ -120,6 +128,7 @@ func (d *Destination) Flush(ctx context.Context) error {
 	return nil
 }
 
+// Teardown gracefully disconnects the client
 func (d *Destination) Teardown(ctx context.Context) error {
 	if d.Mutex != nil {
 		d.Mutex.Lock()

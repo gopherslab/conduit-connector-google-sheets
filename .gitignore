@@ -5,6 +5,7 @@
 *.so
 *.dylib
 *.DS_Store
+conduit-connector-google-sheets
 main
 
 # Test binary, built with `go test -c`

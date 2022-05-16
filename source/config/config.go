@@ -22,15 +22,21 @@ import (
 )
 
 const (
+	// KeyPollingPeriod is the config name for the google-sheets polling period
 	KeyPollingPeriod     = "pollingPeriod"
+	
+	// defaultPollingPeriod is the value assumed for the pooling period when the
+	// config omits the polling period parameter
 	defaultPollingPeriod = "6s"
 )
 
+// Config represents source configuration with Google-Sheets configurations
 type Config struct {
 	config.Config
 	PollingPeriod time.Duration
 }
 
+// Parse attempts to parse the configurations into a Config struct that Source could utilize
 func Parse(cfg map[string]string) (Config, error) {
 	commonConfig, err := config.Parse(cfg)
 	if err != nil {

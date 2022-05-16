@@ -28,6 +28,7 @@ import (
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
+// Source connector
 type Source struct {
 	sdk.UnimplementedSource
 
