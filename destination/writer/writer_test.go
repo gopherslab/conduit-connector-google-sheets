@@ -17,8 +17,10 @@ package writer
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/conduitio/conduit-connector-google-sheets/config"
 	destConfig "github.com/conduitio/conduit-connector-google-sheets/destination/config"
@@ -28,10 +30,9 @@ import (
 
 type writerTest []struct {
 	testName string
-	ctx      context.Context
 	r        []sdk.Record
 	cfg      destConfig.Config
-	client   *http.Client
+	err      error
 	expected [][]interface{}
 }
 
@@ -48,16 +49,55 @@ func TestWriter(t *testing.T) {
 				ValueInputOption: "USER_ENTERED",
 				InsertDataOption: "INSERT_ROW",
 			},
-			client:   &http.Client{},
+			err:      fmt.Errorf("error pushing records to google-sheets"),
+			expected: [][]interface{}{},
+		},
+		{
+			testName: "Non-Empty Record Payload",
+			r: []sdk.Record{
+				{
+					Position:  []byte(``),
+					Metadata:  nil,
+					CreatedAt: time.Time{},
+					Key:       sdk.RawData{0x41, 0x31, 0x33, 0x37},
+					Payload: sdk.RawData{0x5b, 0x22, 0x4f, 0x76, 0x65,
+						0x72, 0x77, 0x72, 0x69, 0x74, 0x65, 0x20, 0x64,
+						0x61, 0x74, 0x61, 0x31, 0x22, 0x2c, 0x22, 0x4f,
+						0x76, 0x65, 0x72, 0x77, 0x72, 0x69, 0x74, 0x65,
+						0x20, 0x64, 0x61, 0x74, 0x61, 0x32, 0x22, 0x2c,
+						0x22, 0x4f, 0x76, 0x65, 0x72, 0x77, 0x72, 0x69,
+						0x74, 0x65, 0x20, 0x64, 0x61, 0x74, 0x61, 0x33,
+						0x22, 0x2c, 0x22, 0x4f, 0x76, 0x65, 0x72, 0x77,
+						0x72, 0x69, 0x74, 0x65, 0x20, 0x64, 0x61, 0x74,
+						0x61, 0x34, 0x22, 0x2c, 0x22, 0x4f, 0x76, 0x65,
+						0x72, 0x77, 0x72, 0x69, 0x74, 0x65, 0x20, 0x64,
+						0x61, 0x74, 0x61, 0x35, 0x22, 0x2c, 0x22, 0x4f,
+						0x76, 0x65, 0x72, 0x77, 0x72, 0x69, 0x74, 0x65,
+						0x20, 0x64, 0x61, 0x74, 0x61, 0x36, 0x22, 0x5d},
+				},
+			},
+			cfg: destConfig.Config{
+				Config: config.Config{
+					Client:              nil,
+					GoogleSpreadsheetID: "19VVe4M-j8MGw-a3B7fcJQnx5JnHjiHf9dwChUkqQ4",
+					GoogleSheetID:       158080911,
+				},
+				SheetName:        "Sheet",
+				ValueInputOption: "USER_ENTERED",
+				InsertDataOption: "INSERT_ROW",
+			},
+			err:      fmt.Errorf("error pushing records to google-sheets"),
 			expected: [][]interface{}{},
 		},
 	}
 
+	ctx := context.Background()
 	for _, tc := range cases {
 		t.Run(tc.testName, func(t *testing.T) {
-			err := Writer(tc.ctx, tc.r, tc.cfg, tc.client)
+			err := Writer(ctx, tc.r, tc.cfg, &http.Client{})
 			if err != nil {
 				assert.NotNil(t, err)
+				assert.Contains(t, err.Error(), tc.err.Error())
 			}
 		})
 	}
