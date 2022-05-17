@@ -22,8 +22,9 @@ import (
 )
 
 func TestParse(t *testing.T) {
-	validCredFile := "../testdata/dummy_cred.json"           //#nosec // nolint: gosec // not valid creds
-	invalidCredFile := "../testdata/dummy_invalid_cred.json" //#nosec // nolint: gosec // not valid creds
+	validCredFile := "/Users/gauravkumar/go/src/github.com/conduit-connector-google-sheets/testdata/dummy_cred.json"           //#nosec // nolint: gosec // not valid creds
+	invalidCredFile := "/Users/gauravkumar/go/src/github.com/conduit-connector-google-sheets/testdata/dummy_invalid_cred.json" //#nosec // nolint: gosec // not valid creds
+	tokenFile := "/Users/gauravkumar/go/src/github.com/conduit-connector-google-sheets/testdata/dummy_token.json"              //#nosec // nolint: gosec // not valid token
 	tests := []struct {
 		name   string
 		config map[string]string
@@ -37,7 +38,7 @@ func TestParse(t *testing.T) {
 	}, {
 		name: "config succeeds",
 		config: map[string]string{
-			KeyTokensFile:      validCredFile,
+			KeyTokensFile:      tokenFile,
 			KeyCredentialsFile: validCredFile,
 			KeySheetURL:        "https://docs.google.com/spreadsheets/d/19VVe4M-j8MGw-a3B7fcJQnx5JnHjiHf9dwChUkqQ4/edit#gid=158080911",
 		},
@@ -95,13 +96,15 @@ func TestParse(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg, err := Parse(tt.config)
-			if tt.err == nil {
+			if err != nil {
+				fmt.Println(fmt.Errorf("%w", tt.err))
+				assert.EqualError(t, err, tt.err.Error())
+			} else {
 				assert.NoError(t, err)
 				tt.want.Client = cfg.Client
 				assert.Equal(t, tt.want, cfg)
 				return
 			}
-			assert.EqualError(t, err, tt.err.Error())
 		})
 	}
 }

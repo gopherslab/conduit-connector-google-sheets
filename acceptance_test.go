@@ -34,10 +34,12 @@ import (
 )
 
 func TestAcceptance(t *testing.T) {
-	validCredFile := "../testdata/dummy_cred.json" //#nosec
+	validCredFile := "/Users/gauravkumar/go/src/github.com/conduit-connector-google-sheets/testdata/dummy_cred.json" //#nosec // nolint: gosec // not valid creds
+	tokenFile := "/Users/gauravkumar/go/src/github.com/conduit-connector-google-sheets/testdata/dummy_token.json" //#nosec // nolint: gosec // not valid token
+
 	sourceConfig := map[string]string{
 		"google.credentialsFile": validCredFile,
-		"google.tokensFile":      validCredFile,
+		"google.tokensFile":      tokenFile,
 		"google.sheetsURL":       "https://docs.google.com/spreadsheets/d/1gQjm4hnSdrMFyPjhlwSGLBbj0ACOxFQJpVST1LmW6Hg/edit#gid=0",
 		"pollingPeriod":          "6s", // Configurable polling period
 	}
@@ -69,7 +71,6 @@ func TestAcceptance(t *testing.T) {
 				"TestDestination_Configure_Success",
 				"TestDestination_WriteAsync_Success",
 				"TestDestination_WriteOrWriteAsync",
-				"TestDestination_Write_Success",
 				"TestSource_Configure_Success",
 				"TestSource_Read_Success",
 				"TestSource_Read_Timeout",
@@ -145,7 +146,6 @@ func TestSource_Read_Success(t *testing.T) {
 	fmt.Printf("Records sent to conduit; %v", records)
 }
 
-/*
 func TestDestination_Write_Success(t *testing.T) {
 	var dataFormat [][]interface{}
 	record := []sdk.Record{}
@@ -185,4 +185,3 @@ func TestDestination_Write_Success(t *testing.T) {
 
 	fmt.Printf("Response from sheets API: %#v", sheetResponse)
 }
-*/

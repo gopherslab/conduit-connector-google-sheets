@@ -15,6 +15,7 @@ limitations under the License.
 package config
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -98,8 +99,8 @@ func TestParse(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.testCase, func(t *testing.T) {
 			cfg, err := Parse(tc.params)
-			if err != nil {
-				assert.NotNil(t, err)
+			if assert.NotNil(t, err) {
+				fmt.Println(fmt.Errorf("%w", err))
 			} else {
 				assert.Equal(t, tc.expected, cfg)
 			}
