@@ -24,7 +24,7 @@ import (
 func TestParse(t *testing.T) {
 	validCredFile := "/Users/gauravkumar/go/src/github.com/conduit-connector-google-sheets/testdata/dummy_cred.json"           //#nosec // nolint: gosec // not valid creds
 	invalidCredFile := "/Users/gauravkumar/go/src/github.com/conduit-connector-google-sheets/testdata/dummy_invalid_cred.json" //#nosec // nolint: gosec // not valid creds
-	tokenFile := "/Users/gauravkumar/go/src/github.com/conduit-connector-google-sheets/testdata/dummy_token.json"              //#nosec // nolint: gosec // not valid token
+	// tokenFile := "/Users/gauravkumar/go/src/github.com/conduit-connector-google-sheets/testdata/dummy_token.json"              //#nosec // nolint: gosec // not valid token
 	tests := []struct {
 		name   string
 		config map[string]string
@@ -38,7 +38,7 @@ func TestParse(t *testing.T) {
 	}, {
 		name: "config succeeds",
 		config: map[string]string{
-			KeyTokensFile:      tokenFile,
+			KeyTokensFile:      validCredFile,
 			KeyCredentialsFile: validCredFile,
 			KeySheetURL:        "https://docs.google.com/spreadsheets/d/19VVe4M-j8MGw-a3B7fcJQnx5JnHjiHf9dwChUkqQ4/edit#gid=158080911",
 		},
