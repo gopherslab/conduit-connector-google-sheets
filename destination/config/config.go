@@ -44,7 +44,7 @@ const (
 
 	// maxBufferSize determines maximum buffer size a config can accept.
 	// When config with bigger buffer size is parsed, an error is returned.
-	maxBufferSize uint64 = 10
+	maxBufferSize uint64 = 100
 )
 
 // Config represents destination configuration with Google-Sheet configurations
