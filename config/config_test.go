@@ -24,7 +24,6 @@ import (
 func TestParse(t *testing.T) {
 	validCredFile := "/Users/gauravkumar/go/src/github.com/conduit-connector-google-sheets/testdata/dummy_cred.json"           //#nosec // nolint: gosec // not valid creds
 	invalidCredFile := "/Users/gauravkumar/go/src/github.com/conduit-connector-google-sheets/testdata/dummy_invalid_cred.json" //#nosec // nolint: gosec // not valid creds
-	// tokenFile := "/Users/gauravkumar/go/src/github.com/conduit-connector-google-sheets/testdata/dummy_token.json"              //#nosec // nolint: gosec // not valid token
 	tests := []struct {
 		name   string
 		config map[string]string

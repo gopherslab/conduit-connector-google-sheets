@@ -147,7 +147,7 @@ func TestSource_Read_Success(t *testing.T) {
 	fmt.Printf("Records sent to conduit; %v", records)
 }
 
-func TestDestination_Write_Success(t *testing.T) {
+func TestDestination_WriteAsync_Success(t *testing.T) {
 	var dataFormat [][]interface{}
 	record := []sdk.Record{}
 
