@@ -34,8 +34,7 @@ import (
 )
 
 func TestAcceptance(t *testing.T) {
-	validCredFile := "/Users/gauravkumar/go/src/github.com/conduit-connector-google-sheets/testdata/dummy_cred.json" //#nosec // nolint: gosec // not valid creds
-	// tokenFile := "/Users/gauravkumar/go/src/github.com/conduit-connector-google-sheets/testdata/dummy_token.json"    //#nosec // nolint: gosec // not valid token
+	validCredFile := "../testdata/dummy_cred.json" //#nosec // nolint: gosec // not valid creds
 
 	sourceConfig := map[string]string{
 		"google.credentialsFile": validCredFile,

@@ -51,12 +51,12 @@ func Writer(ctx context.Context, record []sdk.Record, cfg dcfg.Config, client *h
 	// Creating a google-sheet format to append to google-sheet
 	sheetValueFormat := &sheets.ValueRange{
 		MajorDimension: "ROWS",
-		Range:          cfg.SheetRange,
+		Range:          cfg.SheetName,
 		Values:         dataFormat,
 	}
 
 	_, err = sheetService.Spreadsheets.Values.Append(
-		cfg.GoogleSpreadsheetID, cfg.SheetRange,
+		cfg.GoogleSpreadsheetID, cfg.SheetName,
 		sheetValueFormat).ValueInputOption(
 		cfg.ValueInputOption).InsertDataOption(
 		cfg.InsertDataOption).Context(ctx).Do()

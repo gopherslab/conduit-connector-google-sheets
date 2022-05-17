@@ -25,18 +25,18 @@ import (
 
 const (
 	// KeySheetRange is the name of the sheet needed to fetch data.
-	KeySheetRange = "sheet_range"
+	KeySheetName = "sheetName"
 
 	// KeyBufferSize is the config name for buffer size.
-	KeyBufferSize = "buffer_size"
+	KeyBufferSize = "bufferSize"
 
 	// KeyValueInputOption is the config name for how the input data
 	// should be interpreted. This could be RAW or USER_ENTERED
-	KeyValueInputOption = "value_input_option"
+	KeyValueInputOption = "valueInputOption"
 
 	// KeyValueInputOption is the config name for how the input data
 	// should be inserted. This could be INSERT_ROWS or OVERWRITE
-	KeyInsertDataOption = "insert_data_option"
+	KeyInsertDataOption = "insertDataOption"
 
 	// DefaultKeyInsertDataOption is the value InsertDataOption assumes when the config omits
 	// the InsertDataOption parameter
@@ -50,7 +50,7 @@ const (
 // Config represents destination configuration with Google-Sheet configurations
 type Config struct {
 	config.Config
-	SheetRange       string
+	SheetName        string
 	ValueInputOption string
 	InsertDataOption string
 	BufferSize       uint64
@@ -59,13 +59,14 @@ type Config struct {
 // Parse attempts to parse the configurations into a Config struct that Destination could utilize
 func Parse(cfg map[string]string) (Config, error) {
 	sharedConfig, err := config.Parse(cfg)
+	fmt.Println(err)
 	if err != nil {
 		return Config{}, err
 	}
 
-	sheetRange, exists := cfg[KeySheetRange]
-	if !exists || sheetRange == "" {
-		return Config{}, requiredConfigErr(KeySheetRange)
+	sheetName, exists := cfg[KeySheetName]
+	if !exists || sheetName == "" {
+		return Config{}, requiredConfigErr(KeySheetName)
 	}
 
 	sheetValueInput, exists := cfg[KeyValueInputOption]
@@ -102,7 +103,7 @@ func Parse(cfg map[string]string) (Config, error) {
 
 	destinationConfig := Config{
 		Config:           sharedConfig,
-		SheetRange:       sheetRange,
+		SheetName:        sheetName,
 		ValueInputOption: sheetValueInput,
 		InsertDataOption: sheetDataOption,
 		BufferSize:       bufferSize,

@@ -53,7 +53,7 @@ func (d *Destination) Configure(ctx context.Context,
 
 	d.DestinationConfig = dConfig.Config{
 		Config:           sheetsConfig.Config,
-		SheetRange:       sheetsConfig.SheetRange,
+		SheetName:        sheetsConfig.SheetName,
 		BufferSize:       sheetsConfig.BufferSize,
 		ValueInputOption: sheetsConfig.ValueInputOption,
 		InsertDataOption: sheetsConfig.InsertDataOption,

@@ -14,87 +14,122 @@ limitations under the License.
 */
 package config
 
-//
-// type sourceTestCase []struct {
-//	testCase string
-//	params   map[string]string
-//	expected Config
-//}
+import (
+	"fmt"
+	"testing"
+	"time"
 
-// func TestParse(t *testing.T) {
-//	cases := sourceTestCase{
-//		{
-//			testCase: "Checking against default values",
-//			params: map[string]string{
-//				KeyPollingPeriod: "2m",
-//			},
-//			expected: Config{},
-//		},
-//		{
-//			testCase: "Checking against default values",
-//			params:   map[string]string{},
-//			expected: Config{},
-//		},
-//		{
-//			testCase: "Checking against default values",
-//			params: map[string]string{
-//				KeyPollingPeriod: "",
-//			},
-//			expected: Config{
-//				PollingPeriod: 3 * time.Minute,
-//			},
-//		},
-//		{
-//			testCase: "Checking against default values",
-//			params: map[string]string{
-//				"sheet_id": "32",
-//			},
-//			expected: Config{
-//				PollingPeriod: 3 * time.Minute,
-//			},
-//		},
-//		{
-//			testCase: "Checking against default values",
-//			params: map[string]string{
-//				KeyPollingPeriod: "",
-//			},
-//			expected: Config{},
-//		},
-//		{
-//			testCase: "Checking against if any required value is empty",
-//			params: map[string]string{
-//				KeyPollingPeriod: "2m",
-//			},
-//			expected: Config{},
-//		},
-//		{
-//			testCase: "Checking against random values case",
-//			params: map[string]string{
-//				KeyPollingPeriod: "2s",
-//			},
-//			expected: Config{
-//				PollingPeriod: 2 * time.Second,
-//			},
-//		},
-//		{
-//			testCase: "Checking for IDEAL case - 1",
-//			params: map[string]string{
-//				KeyPollingPeriod: "2m",
-//			},
-//			expected: Config{
-//				PollingPeriod: 2 * time.Minute,
-//			},
-//		},
-//	}
-//
-//	for _, tc := range cases {
-//		t.Run(tc.testCase, func(t *testing.T) {
-//			cfg, err := Parse(tc.params)
-//			if err != nil {
-//				assert.NotNil(t, err)
-//			} else {
-//				assert.Equal(t, tc.expected, cfg)
-//			}
-//		})
-//	}
-//}
+	"github.com/conduitio/conduit-connector-google-sheets/config"
+	"github.com/stretchr/testify/assert"
+)
+
+type sourceTestCase []struct {
+	testCase string
+	params   map[string]string
+	expected Config
+	err      error
+}
+
+func TestParse(t *testing.T) {
+	validCredFile := "../testdata/dummy_cred.json" //#nosec // nolint: gosec // not valid creds
+	cases := sourceTestCase{
+		{
+			testCase: "Checking against default values",
+			params:   map[string]string{},
+			err:      fmt.Errorf("\"google.credentialsFile\" config value must be set"),
+			expected: Config{},
+		},
+		{
+			testCase: "Checking if credentialsFile parameter is empty",
+			params: map[string]string{
+				config.KeyTokensFile:      validCredFile,
+				config.KeyCredentialsFile: "",
+				config.KeySheetURL:        "",
+				KeyPollingPeriod:          "",
+			},
+			err:      fmt.Errorf("\"google.credentialsFile\" config value must be set"),
+			expected: Config{},
+		},
+		{
+			testCase: "Checking if tokensFile parameter is empty",
+			params: map[string]string{
+				config.KeyTokensFile:      "",
+				config.KeyCredentialsFile: validCredFile,
+				config.KeySheetURL:        "",
+				KeyPollingPeriod:          "",
+			},
+			err:      fmt.Errorf("\"google.tokensFile\" config value must be set"),
+			expected: Config{},
+		},
+		{
+			testCase: "Checking if sheetsURL parameter is empty",
+			params: map[string]string{
+				config.KeyTokensFile:      validCredFile,
+				config.KeyCredentialsFile: validCredFile,
+				config.KeySheetURL:        "",
+			},
+			err:      fmt.Errorf("\"google.sheetsURL\" config value must be set"),
+			expected: Config{},
+		},
+		{
+			testCase: "Checking if pollingPeriod parameter is in non-acceptable format",
+			params: map[string]string{
+				config.KeyTokensFile:      validCredFile,
+				config.KeyCredentialsFile: validCredFile,
+				config.KeySheetURL:        "https://docs.google.com/spreadsheets/d/19VVe4M-j8MGw-a3B7fcJQnx5JnHjiHf9dwChUkqQ4/edit#gid=158080911",
+				KeyPollingPeriod:          "minute",
+			},
+			err:      fmt.Errorf("\"minute\" cannot parse interval to time duration"),
+			expected: Config{},
+		},
+		{
+			testCase: "Checking if pollingPeriod parameter is empty",
+			params: map[string]string{
+				config.KeyTokensFile:      validCredFile,
+				config.KeyCredentialsFile: validCredFile,
+				config.KeySheetURL:        "https://docs.google.com/spreadsheets/d/19VVe4M-j8MGw-a3B7fcJQnx5JnHjiHf9dwChUkqQ4/edit#gid=158080911",
+			},
+			err: nil,
+			expected: Config{
+				Config: config.Config{
+					Client:              nil,
+					GoogleSpreadsheetID: "19VVe4M-j8MGw-a3B7fcJQnx5JnHjiHf9dwChUkqQ4",
+					GoogleSheetID:       158080911,
+				},
+				PollingPeriod: 6 * time.Second,
+			},
+		},
+		{
+			testCase: "Checking for ideal case",
+			params: map[string]string{
+				config.KeyTokensFile:      validCredFile,
+				config.KeyCredentialsFile: validCredFile,
+				config.KeySheetURL:        "https://docs.google.com/spreadsheets/d/19VVe4M-j8MGw-a3B7fcJQnx5JnHjiHf9dwChUkqQ4/edit#gid=158080911",
+				KeyPollingPeriod:          "2m",
+			},
+			err: nil,
+			expected: Config{
+				Config: config.Config{
+					Client:              nil,
+					GoogleSpreadsheetID: "19VVe4M-j8MGw-a3B7fcJQnx5JnHjiHf9dwChUkqQ4",
+					GoogleSheetID:       158080911,
+				},
+				PollingPeriod: 2 * time.Minute,
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.testCase, func(t *testing.T) {
+			cfg, err := Parse(tc.params)
+			if err != nil {
+				assert.NotNil(t, err)
+				assert.EqualError(t, err, tc.err.Error())
+			} else {
+				assert.NoError(t, err)
+				tc.expected.Client = cfg.Client
+				assert.EqualValues(t, tc.expected, cfg)
+			}
+		})
+	}
+}

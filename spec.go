@@ -48,7 +48,7 @@ func Specification() sdk.Specification {
 				Required:    true,
 				Description: "Google sheet url to fetch the records from",
 			},
-			dconfig.KeySheetRange: {
+			dconfig.KeySheetName: {
 				Default:     "",
 				Required:    true,
 				Description: "Google sheet id to fetch the records",

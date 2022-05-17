@@ -44,7 +44,7 @@ func TestWriter(t *testing.T) {
 				Config: config.Config{
 					GoogleSpreadsheetID: "123abcd",
 				},
-				SheetRange:       "Sheet",
+				SheetName:        "Sheet",
 				ValueInputOption: "USER_ENTERED",
 				InsertDataOption: "INSERT_ROW",
 			},

@@ -18,80 +18,130 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/conduitio/conduit-connector-google-sheets/config"
 	"github.com/stretchr/testify/assert"
 )
 
 type destTestCase []struct {
 	testCase string
 	params   map[string]string
+	err      error
 	expected Config
 }
 
 func TestParse(t *testing.T) {
+	validCredFile := "../testdata/dummy_cred.json" //#nosec // nolint: gosec // not valid creds
 	cases := destTestCase{
 		{
 			testCase: "Checking against default values",
 			params: map[string]string{
-				"SheetRange":       "",
-				"ValueInputOption": "",
-				"InsertDataOption": "",
+				config.KeyTokensFile:      "",
+				config.KeyCredentialsFile: "",
+				config.KeySheetURL:        "",
+				KeySheetName:              "",
+				KeyValueInputOption:       "",
+				KeyInsertDataOption:       "",
+				KeyBufferSize:             "",
 			},
+			err:      fmt.Errorf("\"google.credentialsFile\" config value must be set"),
 			expected: Config{},
 		},
 		{
 			testCase: "Checking against if any required value is empty",
 			params: map[string]string{
-				"SheetRange":       "Sheet",
-				"ValueInputOption": "",
-				"InsertDataOption": "",
+				config.KeyTokensFile:      validCredFile,
+				config.KeyCredentialsFile: validCredFile,
+				config.KeySheetURL:        "",
+				KeySheetName:              "Sheet",
+				KeyValueInputOption:       "",
+				KeyInsertDataOption:       "",
+				KeyBufferSize:             "",
 			},
+			err:      fmt.Errorf("\"google.sheetsURL\" config value must be set"),
 			expected: Config{},
 		},
 		{
 			testCase: "Checking against random values case",
 			params: map[string]string{
-				"SheetRange":       "",
-				"ValueInputOption": "USER_ENTERED",
-				"InsertDataOption": "",
+				config.KeyTokensFile:      validCredFile,
+				config.KeyCredentialsFile: validCredFile,
+				config.KeySheetURL:        "https://docs.google.com/spreadsheets/d/19VVe4M-j8MGw-a3B7fcJQnx5JnHjiHf9dwChUkqQ4/edit#gid=158080911",
+				KeySheetName:              "",
+				KeyValueInputOption:       "USER_ENTERED",
+				KeyInsertDataOption:       "",
+				KeyBufferSize:             "10",
 			},
+			err:      fmt.Errorf("\"sheetName\" config value must be set"),
 			expected: Config{},
 		},
 		{
 			testCase: "Checking for IDEAL case - 1",
 			params: map[string]string{
-				"SheetRange":       "Sheet",
-				"ValueInputOption": "USER_ENTERED",
-				"InsertDataOption": "",
+				config.KeyTokensFile:      validCredFile,
+				config.KeyCredentialsFile: validCredFile,
+				config.KeySheetURL:        "https://docs.google.com/spreadsheets/d/19VVe4M-j8MGw-a3B7fcJQnx5JnHjiHf9dwChUkqQ4/edit#gid=158080911",
+				KeySheetName:              "Sheet",
+				KeyValueInputOption:       "USER_ENTERED",
+				KeyInsertDataOption:       "",
+				KeyBufferSize:             "",
 			},
+			err: nil,
 			expected: Config{
-				SheetRange:       "Sheet",
+				Config: config.Config{
+					Client:              nil,
+					GoogleSpreadsheetID: "19VVe4M-j8MGw-a3B7fcJQnx5JnHjiHf9dwChUkqQ4",
+					GoogleSheetID:       158080911,
+				},
+				SheetName:        "Sheet",
 				ValueInputOption: "USER_ENTERED",
-				InsertDataOption: "INSERT_ROW",
+				InsertDataOption: "INSERT_ROWS",
+				BufferSize:       10,
 			},
 		},
 		{
 			testCase: "Checking for IDEAL case - 2",
 			params: map[string]string{
-				"SheetRange":       "Sheet",
-				"ValueInputOption": "USER_ENTERED",
+				config.KeyTokensFile:      validCredFile,
+				config.KeyCredentialsFile: validCredFile,
+				config.KeySheetURL:        "https://docs.google.com/spreadsheets/d/19VVe4M-j8MGw-a3B7fcJQnx5JnHjiHf9dwChUkqQ4/edit#gid=158080911",
+				KeySheetName:              "Sheet",
+				KeyValueInputOption:       "USER_ENTERED",
 			},
+			err: nil,
 			expected: Config{
-				SheetRange:       "Sheet",
+				Config: config.Config{
+					Client:              nil,
+					GoogleSpreadsheetID: "19VVe4M-j8MGw-a3B7fcJQnx5JnHjiHf9dwChUkqQ4",
+					GoogleSheetID:       158080911,
+				},
+				SheetName:        "Sheet",
 				ValueInputOption: "USER_ENTERED",
-				InsertDataOption: "INSERT_ROW",
+				InsertDataOption: "INSERT_ROWS",
+				BufferSize:       10,
 			},
 		},
 		{
 			testCase: "Checking for IDEAL case - 3",
 			params: map[string]string{
-				"SheetRange":       "Sheet",
-				"ValueInputOption": "USER_ENTERED",
-				"InsertDataOption": "INSERT_ROW",
+				config.KeyTokensFile:      validCredFile,
+				config.KeyCredentialsFile: validCredFile,
+				config.KeySheetURL:        "https://docs.google.com/spreadsheets/d/19VVe4M-j8MGw-a3B7fcJQnx5JnHjiHf9dwChUkqQ4/edit#gid=158080911",
+				KeySheetName:              "Sheet",
+				KeyValueInputOption:       "USER_ENTERED",
+				KeyInsertDataOption:       "INSERT_ROWS",
+				KeyBufferSize:             "10",
 			},
+			err: nil,
 			expected: Config{
-				SheetRange:       "Sheet",
+				Config: config.Config{
+					Client:              nil,
+					GoogleSpreadsheetID: "19VVe4M-j8MGw-a3B7fcJQnx5JnHjiHf9dwChUkqQ4",
+					GoogleSheetID:       158080911,
+				},
+				SheetName:        "Sheet",
 				ValueInputOption: "USER_ENTERED",
-				InsertDataOption: "INSERT_ROW",
+				InsertDataOption: "INSERT_ROWS",
+				BufferSize:       10,
 			},
 		},
 	}
@@ -99,10 +149,13 @@ func TestParse(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.testCase, func(t *testing.T) {
 			cfg, err := Parse(tc.params)
-			if assert.NotNil(t, err) {
-				fmt.Println(fmt.Errorf("%w", err))
+			if err != nil {
+				assert.NotNil(t, err)
+				assert.EqualError(t, err, tc.err.Error())
 			} else {
-				assert.Equal(t, tc.expected, cfg)
+				assert.NoError(t, err)
+				tc.expected.Client = cfg.Client
+				assert.EqualValues(t, tc.expected, cfg)
 			}
 		})
 	}
