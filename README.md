@@ -61,7 +61,7 @@ The config passed to `Configure` can contain the following fields.
 | `google.credentialsFile`     |  Path to credentials file which can be downloaded from Google Cloud Platform(in .json format) to authorise the user.                                                                     | yes       | "path://to/credential/file" |
 | `google.tokensFile`          | Path to file in .json format which includes the `access_token`, `token_type`, `refresh_token` and `expiry`.                                                                   | yes       | "path://to/token/file"       |
 | `google.sheetsURL`          | URL of the google spreadsheet(copy the entire url from the address bar).                                                                  | yes       | "https://docs.google.com/spreadsheets/d/dummy_spreadsheet_id/edit#gid=0"       |
-| `sheetName`          | Sheet name on which the data is to be appended.                                                                  | yes       | "SHEET_NAME"       |
+| `sheetName`          | Sheet name on which the data is to be appended.                                                                  | yes       | "sheetName"       |
 | `insertDataOption`       | How the data be inserted in google-sheets(i.e either `OVERWRITE` or `INSERT_ROWS`). The default value for `insertDataOption` is `INSERT_ROWS`   | no        | "insertDataOption"            |
 | `bufferSize`          | Minumun number of records in buffer to hit the google-sheet api. The `buffer_size` should be less than the `maxBufferSize` whose default value is `100`, otherwise an error is thrown.                                                                 | no       | "bufferSize"            |
 
