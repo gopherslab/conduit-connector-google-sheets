@@ -31,10 +31,6 @@ const (
 	KeyBufferSize = "bufferSize"
 
 	// KeyValueInputOption is the config name for how the input data
-	// should be interpreted. This could be RAW or USER_ENTERED
-	KeyValueInputOption = "valueInputOption"
-
-	// KeyValueInputOption is the config name for how the input data
 	// should be inserted. This could be INSERT_ROWS or OVERWRITE
 	KeyInsertDataOption = "insertDataOption"
 
@@ -51,7 +47,6 @@ const (
 type Config struct {
 	config.Config
 	SheetName        string
-	ValueInputOption string
 	InsertDataOption string
 	BufferSize       uint64
 }
@@ -67,11 +62,6 @@ func Parse(cfg map[string]string) (Config, error) {
 	sheetName := cfg[KeySheetName]
 	if sheetName == "" {
 		return Config{}, requiredConfigErr(KeySheetName)
-	}
-
-	sheetValueInput := cfg[KeyValueInputOption]
-	if sheetValueInput == "" {
-		return Config{}, requiredConfigErr(KeyValueInputOption)
 	}
 
 	sheetDataOption := cfg[KeyInsertDataOption]
@@ -104,7 +94,6 @@ func Parse(cfg map[string]string) (Config, error) {
 	destinationConfig := Config{
 		Config:           sharedConfig,
 		SheetName:        sheetName,
-		ValueInputOption: sheetValueInput,
 		InsertDataOption: sheetDataOption,
 		BufferSize:       bufferSize,
 	}

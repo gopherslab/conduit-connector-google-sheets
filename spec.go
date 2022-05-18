@@ -53,11 +53,6 @@ func Specification() sdk.Specification {
 				Required:    true,
 				Description: "Google sheet id to fetch the records",
 			},
-			dconfig.KeyValueInputOption: {
-				Default:     "",
-				Required:    true,
-				Description: "Google sheet id to fetch the records",
-			},
 			dconfig.KeyInsertDataOption: {
 				Default:     dconfig.DefaultKeyInsertDataOption,
 				Required:    false,

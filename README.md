@@ -1,7 +1,7 @@
 # Conduit Connnector Google-Sheets
 
 ###  General
-The Conduit Connector for [Google Sheets](https://github.com/gopherslab/conduit-connector-google-sheets/tree/dev) fetches all the records from a particular sheet.
+The Conduit Connector for [Google Sheets](https://github.com/gopherslab/conduit-connector-google-sheets) fetches all the records from a particular sheet.
 
 
 ## Google-Sheet Source
@@ -18,7 +18,7 @@ Upon successful connection, an api hit will fetch all the records present in the
 If there are single/multiple empty rows in between the two records, it will fetch only the last record before the first empty row, and will hold that position until a new row/record has been added.
 
 
-#### Position Handling
+### Position Handling
 
 The Google-sheet connector stores the the last row of the fetched sheet data as position. If in case, there are empty rows, Google-Sheet connector will fetch till the next row is empty and that last row will be stored as in position. 
 
@@ -62,9 +62,8 @@ The config passed to `Configure` can contain the following fields.
 | `google.tokensFile`          | Path to file in .json format which includes the `access_token`, `token_type`, `refresh_token` and `expiry`.                                                                   | yes       | "path://to/token/file"       |
 | `google.sheetsURL`          | URL of the google spreadsheet(copy the entire url from the address bar).                                                                  | yes       | "https://docs.google.com/spreadsheets/d/dummy_spreadsheet_id/edit#gid=0"       |
 | `gsheets.spreadsheetId`          | Spreadsheet ID                                                                | yes       | "SPREADSHEET_ID"         |
-| `sheet_range`          | Sheet name on which the data is to be appended.                                                                  | yes       | "SHEET_NAME"       |
-| `value_input_option`       | How the data is being provided to google-sheets (i.e either `RAW` or `USER_ENTERED`). The default value for `VALUE_INPUT_OPTION` is `USER_ENTERED`  | yes        | "VALUE_INPUT_OPTION"            |
-| `insert_data_option`       | How the data be inserted in google-sheets(i.e either `OVERWRITE` or `INSERT_ROWS`). The default value for `INSERT_DATA_OPTION` is `INSERT_ROWS`   | no        | "INSERT_DATA_OPTION"            |
-| `buffer_size`          | Minumun number of records in buffer to hit the google-sheet api. The `buffer_size` should be less than the `maxBufferSize` whose default value is `100`, otherwise an error is thrown.                                                                 | no       | "Buffer"            |
+| `sheetName`          | Sheet name on which the data is to be appended.                                                                  | yes       | "SHEET_NAME"       |
+| `insertDataOption`       | How the data be inserted in google-sheets(i.e either `OVERWRITE` or `INSERT_ROWS`). The default value for `insertDataOption` is `INSERT_ROWS`   | no        | "insertDataOption"            |
+| `bufferSize`          | Minumun number of records in buffer to hit the google-sheet api. The `buffer_size` should be less than the `maxBufferSize` whose default value is `100`, otherwise an error is thrown.                                                                 | no       | "bufferSize"            |
 
 

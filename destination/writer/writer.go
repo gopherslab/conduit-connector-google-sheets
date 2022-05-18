@@ -48,6 +48,10 @@ func Writer(ctx context.Context, record []sdk.Record, cfg dcfg.Config, client *h
 		return fmt.Errorf("unable to create google-sheet service %w", err)
 	}
 
+	// KeyValueInputOption is the config name for how the input data
+	// should be interpreted.
+	const KeyValueInputOption = "USER_ENTERED"
+
 	// Creating a google-sheet format to append to google-sheet
 	sheetValueFormat := &sheets.ValueRange{
 		MajorDimension: "ROWS",
@@ -58,7 +62,7 @@ func Writer(ctx context.Context, record []sdk.Record, cfg dcfg.Config, client *h
 	_, err = sheetService.Spreadsheets.Values.Append(
 		cfg.GoogleSpreadsheetID, cfg.SheetName,
 		sheetValueFormat).ValueInputOption(
-		cfg.ValueInputOption).InsertDataOption(
+		KeyValueInputOption).InsertDataOption(
 		cfg.InsertDataOption).Context(ctx).Do()
 
 	if err != nil {
