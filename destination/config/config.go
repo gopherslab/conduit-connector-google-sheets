@@ -64,23 +64,23 @@ func Parse(cfg map[string]string) (Config, error) {
 		return Config{}, err
 	}
 
-	sheetName, exists := cfg[KeySheetName]
-	if !exists || sheetName == "" {
+	sheetName := cfg[KeySheetName]
+	if sheetName == "" {
 		return Config{}, requiredConfigErr(KeySheetName)
 	}
 
-	sheetValueInput, exists := cfg[KeyValueInputOption]
-	if !exists || sheetValueInput == "" {
+	sheetValueInput := cfg[KeyValueInputOption]
+	if sheetValueInput == "" {
 		return Config{}, requiredConfigErr(KeyValueInputOption)
 	}
 
-	sheetDataOption, exists := cfg[KeyInsertDataOption]
-	if !exists || sheetDataOption == "" {
+	sheetDataOption := cfg[KeyInsertDataOption]
+	if sheetDataOption == "" {
 		sheetDataOption = DefaultKeyInsertDataOption
 	}
 
-	bufferSizeString, exists := cfg[KeyBufferSize]
-	if !exists || bufferSizeString == "" {
+	bufferSizeString := cfg[KeyBufferSize]
+	if bufferSizeString == "" {
 		bufferSizeString = fmt.Sprintf("%d", maxBufferSize)
 	}
 

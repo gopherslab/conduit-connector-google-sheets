@@ -59,18 +59,18 @@ type Config struct {
 // Parse attempts to parse plugins.Config into a Config struct
 func Parse(config map[string]string) (Config, error) {
 	// check if configs exist
-	credFile, ok := config[KeyCredentialsFile]
-	if !ok || credFile == "" {
+	credFile := config[KeyCredentialsFile]
+	if credFile == "" {
 		return Config{}, requiredConfigErr(KeyCredentialsFile)
 	}
 
-	tokenFile, ok := config[KeyTokensFile]
-	if !ok || tokenFile == "" {
+	tokenFile := config[KeyTokensFile]
+	if tokenFile == "" {
 		return Config{}, requiredConfigErr(KeyTokensFile)
 	}
 
-	sheetURL, ok := config[KeySheetURL]
-	if !ok || sheetURL == "" {
+	sheetURL := config[KeySheetURL]
+	if sheetURL == "" {
 		return Config{}, requiredConfigErr(KeySheetURL)
 	}
 
