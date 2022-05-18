@@ -6,7 +6,7 @@ The Conduit Connector for [Google Sheets](https://github.com/gopherslab/conduit-
 
 ## Google-Sheet Source
 
-The Google-Sheet Connector connects to google sheets via google-sheets api(v4) witht the provided configuration using the OAuth2 credentials, SpreadsheetId and SheetId along with a configurable time interval for the next consecutive run. 
+The Google-Sheet Connector connects to google sheets via google-sheets api(v4) witht the provided configuration using the `google.credentialsFile`, `google.tokensFile`, `google.sheetsURL` and along with a configurable pollingPeriod(Optional). 
 
 The `Configure` method is called to parse the configurations. After which, the `Open` method is called to start the connection from the provided position.
 
@@ -37,13 +37,13 @@ The config passed to `Configure` can contain the following fields.
 
 ### Known Limitations
 
-* At a time, only one `sheet_id` can be used to fetch the records from the google-sheet.
+* At a time, only one `gid` inside `google.sheetsURL` can be used to fetch the records from the google-sheet.
 * Any modification/update/delete made to a previous row(s) in google-sheet, after the records are fetched will not be visible in the next api hit.
 
 
 ## Google-Sheet Destination
 
-The Google-Sheet Destination connector connects to the provided Google SheetID with the provided configurations, using `access_token`, `refresh_token`, `spreadsheet_id`, `sheet_range`, `value_input_option`.  Then will call `Configure` to parse the configurations, If parsing was not successful, then an error will occur. After that, the Open method is called to start the connection. 
+The Google-Sheet Destination connector connects to the provided Google SheetID with the provided configurations, using `google.credentialsFile`, `google.tokensFile`, `google.sheetsURL` and `sheetName`.  Then will call `Configure` to parse the configurations, If parsing was not successful, then an error will occur. After that, the Open method is called to start the connection. 
 
 
 ### Google-Sheet Writer
@@ -61,7 +61,6 @@ The config passed to `Configure` can contain the following fields.
 | `google.credentialsFile`     |  Path to credentials file which can be downloaded from Google Cloud Platform(in .json format) to authorise the user.                                                                     | yes       | "path://to/credential/file" |
 | `google.tokensFile`          | Path to file in .json format which includes the `access_token`, `token_type`, `refresh_token` and `expiry`.                                                                   | yes       | "path://to/token/file"       |
 | `google.sheetsURL`          | URL of the google spreadsheet(copy the entire url from the address bar).                                                                  | yes       | "https://docs.google.com/spreadsheets/d/dummy_spreadsheet_id/edit#gid=0"       |
-| `gsheets.spreadsheetId`          | Spreadsheet ID                                                                | yes       | "SPREADSHEET_ID"         |
 | `sheetName`          | Sheet name on which the data is to be appended.                                                                  | yes       | "SHEET_NAME"       |
 | `insertDataOption`       | How the data be inserted in google-sheets(i.e either `OVERWRITE` or `INSERT_ROWS`). The default value for `insertDataOption` is `INSERT_ROWS`   | no        | "insertDataOption"            |
 | `bufferSize`          | Minumun number of records in buffer to hit the google-sheet api. The `buffer_size` should be less than the `maxBufferSize` whose default value is `100`, otherwise an error is thrown.                                                                 | no       | "bufferSize"            |
