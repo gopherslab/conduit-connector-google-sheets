@@ -128,11 +128,11 @@ func TestParse(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.testCase, func(t *testing.T) {
 			cfg, err := Parse(tc.params)
-			if err != nil {
+			if tc.err != nil {
 				assert.NotNil(t, err)
-				assert.EqualError(t, err, tc.err.Error())
 			} else {
 				assert.NoError(t, err)
+				assert.NotNil(t, cfg)
 				tc.expected.Client = cfg.Client
 				assert.EqualValues(t, tc.expected, cfg)
 			}
