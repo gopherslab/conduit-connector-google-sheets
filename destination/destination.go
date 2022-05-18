@@ -18,6 +18,7 @@ package destination
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"sync"
 
@@ -48,7 +49,7 @@ func (d *Destination) Configure(ctx context.Context,
 	cfg map[string]string) error {
 	sheetsConfig, err := dConfig.Parse(cfg)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed parsing the config: %w", err)
 	}
 
 	d.DestinationConfig = dConfig.Config{
@@ -97,7 +98,7 @@ func (d *Destination) WriteAsync(ctx context.Context,
 	if len(d.Buffer) >= int(d.DestinationConfig.BufferSize) {
 		err := d.Flush(ctx)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed flushing the records: %w", err)
 		}
 	}
 
@@ -120,7 +121,7 @@ func (d *Destination) Flush(ctx context.Context) error {
 	for _, ack := range d.AckCache {
 		err := ack(d.Error)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed acknowledgement: %w", err)
 		}
 	}
 	d.AckCache = d.AckCache[:0]
@@ -134,7 +135,7 @@ func (d *Destination) Teardown(ctx context.Context) error {
 		d.Mutex.Lock()
 		defer d.Mutex.Unlock()
 		if err := d.Flush(ctx); err != nil {
-			return err
+			return fmt.Errorf("unable to teardown. Failed in flushing records: %w", err)
 		}
 	}
 	d.Client = nil
