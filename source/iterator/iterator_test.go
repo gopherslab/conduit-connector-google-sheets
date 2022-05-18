@@ -149,37 +149,6 @@ func TestGetSheetRecords_RateLimit(t *testing.T) {
 	assert.Nil(t, recs)
 }
 
-// func TestFetchRecords_429(t *testing.T) {
-// 	header := http.Header{}
-// 	header.Set("Retry_After", "93")
-// 	th := &testHandler{
-// 		t:             t,
-// 		resp:          []byte(``),
-// 		sheetID:       0,
-// 		spreadsheetID: "",
-// 	}
-// 	testServer := httptest.NewServer(th)
-// 	cdc := &SheetsIterator{
-// 		sheetID:       0,
-// 		spreadsheetID: "",
-// 		rowOffset:     0,
-// 		client:        &http.Client{},
-// 	}
-// 	ctx := context.Background()
-// 	recs, err := cdc.getSheetRecords(ctx)
-// 	assert.NoError(t, err)
-// 	assert.Len(t, recs, 0)
-// 	assert.GreaterOrEqual(t, cdc.nextRun.Unix(), time.Now().Add(90*time.Second).Unix())
-// }
-
-// type testHandler struct {
-// 	t             *testing.T
-// 	client        *http.Client
-// 	resp          []byte
-// 	sheetID       int64
-// 	spreadsheetID string
-// }
-
 func TestNext(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	tmbWithCtx, _ := tomb.WithContext(ctx)

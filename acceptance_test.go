@@ -47,10 +47,10 @@ func TestAcceptance(t *testing.T) {
 		"google.credentialsFile": validCredFile,
 		"google.tokensFile":      validCredFile,
 		"google.sheetsURL":       "https://docs.google.com/spreadsheets/d/1gQjm4hnSdrMFyPjhlwSGLBbj0ACOxFQJpVST1LmW6Hg/edit#gid=0",
-		"sheet_range":            "Sheet2",
-		"value_input_option":     "USER_ENTERED",
-		"insert_data_option":     "INSERT_ROWS",
-		"buffer_size":            "10",
+		"sheetName":              "Sheet2",
+		"valueInputOption":       "USER_ENTERED",
+		"insertDataOption":       "INSERT_ROWS",
+		"bufferSize":             "10",
 	}
 
 	sdk.AcceptanceTest(t, sdk.ConfigurableAcceptanceTestDriver{

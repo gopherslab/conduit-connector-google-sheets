@@ -16,6 +16,9 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -31,7 +34,10 @@ type sourceTestCase []struct {
 }
 
 func TestParse(t *testing.T) {
-	validCredFile := "../testdata/dummy_cred.json" //#nosec // nolint: gosec // not valid creds
+	// validCredFile := "../testdata/dummy_cred.json" //#nosec // nolint: gosec // not valid creds
+	filePath := getFilePath("conduit-connector-google-sheets")
+	validCredFile := fmt.Sprintf("%s/testdata/dummy_cred.json", filePath)
+
 	cases := sourceTestCase{
 		{
 			testCase: "Checking against default values",
@@ -132,4 +138,12 @@ func TestParse(t *testing.T) {
 			}
 		})
 	}
+}
+
+func getFilePath(path string) string {
+	wd, _ := os.Getwd()
+	for !strings.HasSuffix(wd, path) {
+		wd = filepath.Dir(wd)
+	}
+	return wd
 }

@@ -16,14 +16,18 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestParse(t *testing.T) {
-	validCredFile := "../testdata/dummy_cred.json"           //#nosec // nolint: gosec // not valid creds
-	invalidCredFile := "../testdata/dummy_invalid_cred.json" //#nosec // nolint: gosec // not valid creds
+	filePath := getFilePath("conduit-connector-google-sheets")
+	validCredFile := fmt.Sprintf("%s/testdata/dummy_cred.json", filePath)
+	invalidCredFile := fmt.Sprintf("%s/testdata/dummy_invalid_cred.json", filePath)
 	tests := []struct {
 		name   string
 		config map[string]string
@@ -106,4 +110,12 @@ func TestParse(t *testing.T) {
 			}
 		})
 	}
+}
+
+func getFilePath(path string) string {
+	wd, _ := os.Getwd()
+	for !strings.HasSuffix(wd, path) {
+		wd = filepath.Dir(wd)
+	}
+	return wd
 }

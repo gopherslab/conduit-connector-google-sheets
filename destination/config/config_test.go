@@ -16,6 +16,9 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/conduitio/conduit-connector-google-sheets/config"
@@ -30,7 +33,9 @@ type destTestCase []struct {
 }
 
 func TestParse(t *testing.T) {
-	validCredFile := "../testdata/dummy_cred.json" //#nosec // nolint: gosec // not valid creds
+	filePath := getFilePath("conduit-connector-google-sheets")
+	validCredFile := fmt.Sprintf("%s/testdata/dummy_cred.json", filePath)
+
 	cases := destTestCase{
 		{
 			testCase: "Checking against default values",
@@ -95,7 +100,7 @@ func TestParse(t *testing.T) {
 				SheetName:        "Sheet",
 				ValueInputOption: "USER_ENTERED",
 				InsertDataOption: "INSERT_ROWS",
-				BufferSize:       10,
+				BufferSize:       100,
 			},
 		},
 		{
@@ -117,7 +122,7 @@ func TestParse(t *testing.T) {
 				SheetName:        "Sheet",
 				ValueInputOption: "USER_ENTERED",
 				InsertDataOption: "INSERT_ROWS",
-				BufferSize:       10,
+				BufferSize:       100,
 			},
 		},
 		{
@@ -159,4 +164,12 @@ func TestParse(t *testing.T) {
 			}
 		})
 	}
+}
+
+func getFilePath(path string) string {
+	wd, _ := os.Getwd()
+	for !strings.HasSuffix(wd, path) {
+		wd = filepath.Dir(wd)
+	}
+	return wd
 }
