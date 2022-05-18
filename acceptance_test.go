@@ -17,24 +17,45 @@ package googlesheets
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
-	"time"
 
 	"github.com/conduitio/conduit-connector-google-sheets/destination"
 	"github.com/conduitio/conduit-connector-google-sheets/source"
-	"github.com/conduitio/conduit-connector-google-sheets/source/position"
-	"google.golang.org/api/option"
-	sheets "google.golang.org/api/sheets/v4"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"go.uber.org/goleak"
 )
 
+var (
+	records   []sdk.Record
+	pos       sdk.Position
+	rowOffset int64
+	ctx       context.Context
+)
+
+func init() {
+	var inputRecords []sdk.Record
+	inputBytes := []byte(`["Name","EmployeID","Salary","Age","State","Position"]`)
+	inputRecord := sdk.Record{
+		Payload:  sdk.RawData(inputBytes),
+		Key:      sdk.RawData(`A1`),
+		Position: []byte(`{"row_offset":1}`),
+	}
+	inputRecords = append(inputRecords, inputRecord)
+
+	records = inputRecords
+	pos = []byte(`{"row_offset":1}`)
+	rowOffset = 1
+	ctx = context.Background()
+}
+
 func TestAcceptance(t *testing.T) {
-	validCredFile := "../testdata/dummy_cred.json" //#nosec // nolint: gosec // not valid creds
+	filePath := getFilePath("conduit-connector-google-sheets")
+	validCredFile := fmt.Sprintf("%s/testdata/dummy_cred.json", filePath)
 
 	sourceConfig := map[string]string{
 		"google.credentialsFile": validCredFile,
@@ -48,7 +69,6 @@ func TestAcceptance(t *testing.T) {
 		"google.tokensFile":      validCredFile,
 		"google.sheetsURL":       "https://docs.google.com/spreadsheets/d/1gQjm4hnSdrMFyPjhlwSGLBbj0ACOxFQJpVST1LmW6Hg/edit#gid=0",
 		"sheetName":              "Sheet2",
-		"valueInputOption":       "USER_ENTERED",
 		"insertDataOption":       "INSERT_ROWS",
 		"bufferSize":             "10",
 	}
@@ -64,124 +84,23 @@ func TestAcceptance(t *testing.T) {
 			DestinationConfig: destConfig,
 			GoleakOptions:     []goleak.Option{goleak.IgnoreCurrent()},
 			Skip: []string{
-				// these tests are skipped, because they need valid json of type map[string]string to work
-				// whereas the code generates random string payload
+				// the following tests are skipped, because they need a valid credential file and token file
+				// required for oauth2 authorisation in order to create a google-sheet client to work properly.
 				"TestSource_Open_ResumeAtPosition",
-				"TestDestination_Configure_Success",
 				"TestDestination_WriteAsync_Success",
 				"TestDestination_WriteOrWriteAsync",
 				"TestDestination_Write_Success",
-				"TestSource_Configure_Success",
 				"TestSource_Read_Success",
 				"TestSource_Read_Timeout",
-				"TestSpecifier_Specify_Success",
-				"TestSpecifier_Specify_Success/destinationParams",
 			},
 		},
 	})
 }
 
-func TestSource_Read_Success(t *testing.T) {
-	sheetService, err := sheets.NewService(context.Background(), option.WithHTTPClient(&http.Client{}))
-	if err != nil {
-		fmt.Printf("error creating sheet client: %v", err)
-		return
+func getFilePath(path string) string {
+	wd, _ := os.Getwd()
+	for !strings.HasSuffix(wd, path) {
+		wd = filepath.Dir(wd)
 	}
-
-	var (
-		rowOffset int64
-		s         sheets.DataFilter
-	)
-	dataFilters := make([]*sheets.DataFilter, 0)
-	s.GridRange = &sheets.GridRange{
-		SheetId:       0, // sheetID in int64
-		StartRowIndex: rowOffset,
-	}
-	dataFilters = append(dataFilters, &s)
-	rbt := &sheets.BatchGetValuesByDataFilterRequest{
-		ValueRenderOption:    "",
-		DataFilters:          dataFilters,
-		DateTimeRenderOption: "FORMATTED_STRING",
-	}
-	res, err := sheetService.Spreadsheets.Values.BatchGetByDataFilter("spreadsheetID", rbt).Context(context.Background()).Do()
-	if err != nil {
-		fmt.Printf("error response from sheetsAPI: %v", err)
-		return
-	}
-	valueRange := res.ValueRanges[0].ValueRange
-
-	// Eliminating the empty records
-	responseData := valueRange.Values
-	for index, value := range responseData {
-		if len(value) == 0 {
-			responseData = responseData[:index]
-			break
-		}
-	}
-
-	// iterating over the records
-	records := make([]sdk.Record, 0, len(responseData))
-	for index, val := range responseData {
-		rawData, err := json.Marshal(val)
-		if err != nil {
-			fmt.Printf("error marshaling the map: %v", err)
-			return
-		}
-		rowOffset := rowOffset + int64(index) + 1
-		lastRowPosition := position.SheetPosition{
-			RowOffset: rowOffset,
-		}
-
-		// Creating every record
-		records = append(records, sdk.Record{
-			Position:  lastRowPosition.RecordPosition(),
-			Metadata:  nil,
-			CreatedAt: time.Now(),
-			Key:       sdk.RawData(fmt.Sprintf("A%d", rowOffset)),
-			Payload:   sdk.RawData(rawData),
-		})
-	}
-
-	// All the records sent to the conduit server
-	fmt.Printf("Records sent to conduit; %v", records)
-}
-
-func TestDestination_WriteAsync_Success(t *testing.T) {
-	var dataFormat [][]interface{}
-	record := []sdk.Record{}
-
-	for _, dataValue := range record {
-		rowArr := make([]interface{}, 0)
-		err := json.Unmarshal(dataValue.Payload.Bytes(), &rowArr)
-		if err != nil {
-			fmt.Printf("unable to marshal the record %v", err)
-			return
-		}
-		dataFormat = append(dataFormat, rowArr)
-	}
-
-	sheetService, err := sheets.NewService(context.Background(), option.WithHTTPClient(&http.Client{}))
-	if err != nil {
-		fmt.Printf("unable to create google-sheet service %v", err)
-		return
-	}
-
-	sheetValueFormat := &sheets.ValueRange{
-		MajorDimension: "ROWS",
-		Range:          "SheetRange",
-		Values:         dataFormat,
-	}
-
-	sheetResponse, err := sheetService.Spreadsheets.Values.Append(
-		"GoogleSpreadsheetID", "SheetRange",
-		sheetValueFormat).ValueInputOption(
-		"ValueInputOption").InsertDataOption(
-		"InsertDataOption").Context(context.Background()).Do()
-
-	if err != nil {
-		fmt.Printf("error pushing records to google-sheets %v", err)
-		return
-	}
-
-	fmt.Printf("Response from sheets API: %#v", sheetResponse)
+	return wd
 }
