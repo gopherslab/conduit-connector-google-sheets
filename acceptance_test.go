@@ -18,89 +18,262 @@ package googlesheets
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"os"
-	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 
+	"github.com/conduitio/conduit-connector-google-sheets/config"
 	"github.com/conduitio/conduit-connector-google-sheets/destination"
 	"github.com/conduitio/conduit-connector-google-sheets/source"
-
 	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/matryer/is"
 	"go.uber.org/goleak"
+	"google.golang.org/api/option"
+	"google.golang.org/api/sheets/v4"
 )
 
 var (
-	records   []sdk.Record
-	pos       sdk.Position
-	rowOffset int64
-	ctx       context.Context
+	offset        int
+	sheetName     string
+	credFilePath  string
+	tokenFilePath string
+	sheetURL      string
 )
 
-func init() {
-	var inputRecords []sdk.Record
-	inputBytes := []byte(`["Name","EmployeID","Salary","Age","State","Position"]`)
-	inputRecord := sdk.Record{
-		Payload:  sdk.RawData(inputBytes),
-		Key:      sdk.RawData(`A1`),
-		Position: []byte(`{"row_offset":1}`),
-	}
-	inputRecords = append(inputRecords, inputRecord)
-
-	records = inputRecords
-	pos = []byte(`{"row_offset":1}`)
-	rowOffset = 1
-	ctx = context.Background()
-}
-
 func TestAcceptance(t *testing.T) {
-	filePath := getFilePath("conduit-connector-google-sheets")
-	validCredFile := fmt.Sprintf("%s/testdata/dummy_cred.json", filePath)
+	credJSON := strings.TrimSpace(os.Getenv("CONDUIT_GOOGLE_CREDENTIAL_JSON"))
+	if credJSON != "" {
+		credFile, err := os.CreateTemp("", "cred*.json")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.Remove(credFilePath)
+		if _, err = credFile.WriteString(credJSON); err != nil {
+			t.Error("error writing cred file", err)
+		}
+		credFilePath = credFile.Name()
+	} else {
+		t.Error("credentials not set in env CONDUIT_GOOGLE_CREDENTIAL_JSON")
+		t.FailNow()
+	}
+
+	tokenJSON := strings.TrimSpace(os.Getenv("CONDUIT_GOOGLE_TOKEN_JSON"))
+	if tokenJSON != "" {
+		tokenFile, err := os.CreateTemp("", "token*.json")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.Remove(tokenFilePath)
+
+		if _, err = tokenFile.WriteString(tokenJSON); err != nil {
+			t.Error("error writing token file", err)
+		}
+		tokenFilePath = tokenFile.Name()
+	} else {
+		t.Error("token not set in env CONDUIT_GOOGLE_TOKEN_JSON")
+		t.FailNow()
+	}
+
+	sheetURL = strings.TrimSpace(os.Getenv("CONDUIT_GOOGLE_SHEET_URL"))
+	if sheetURL == "" {
+		t.Error("sheetURL not set in env CONDUIT_GOOGLE_SHEET_URL")
+		t.Skip()
+	}
+
+	sheetName = strings.TrimSpace(os.Getenv("CONDUIT_GOOGLE_SHEET_NAME"))
+	if sheetName == "" {
+		t.Error("sheetName not set in env CONDUIT_GOOGLE_SHEET_NAME")
+		t.FailNow()
+	}
 
 	sourceConfig := map[string]string{
-		"google.credentialsFile": validCredFile,
-		"google.tokensFile":      validCredFile,
-		"google.sheetsURL":       "https://docs.google.com/spreadsheets/d/1gQjm4hnSdrMFyPjhlwSGLBbj0ACOxFQJpVST1LmW6Hg/edit#gid=0",
-		"pollingPeriod":          "6s", // Configurable polling period
+		"google.credentialsFile": credFilePath,
+		"google.tokensFile":      tokenFilePath,
+		"google.sheetsURL":       sheetURL,
+		"pollingPeriod":          "1s", // Configurable polling period
 	}
 
 	destConfig := map[string]string{
-		"google.credentialsFile": validCredFile,
-		"google.tokensFile":      validCredFile,
-		"google.sheetsURL":       "https://docs.google.com/spreadsheets/d/1gQjm4hnSdrMFyPjhlwSGLBbj0ACOxFQJpVST1LmW6Hg/edit#gid=0",
-		"sheetName":              "Sheet2",
+		"google.credentialsFile": credFilePath,
+		"google.tokensFile":      tokenFilePath,
+		"google.sheetsURL":       sheetURL,
+		"sheetName":              sheetName,
+		"valueInputOption":       "USER_ENTERED",
 		"insertDataOption":       "INSERT_ROWS",
 		"bufferSize":             "10",
 	}
 
-	sdk.AcceptanceTest(t, sdk.ConfigurableAcceptanceTestDriver{
-		Config: sdk.ConfigurableAcceptanceTestDriverConfig{
-			Connector: sdk.Connector{ // Note that this variable should rather be created globally in `connector.go`
-				NewSpecification: Specification,
-				NewSource:        source.NewSource,
-				NewDestination:   destination.NewDestination,
-			},
-			SourceConfig:      sourceConfig,
-			DestinationConfig: destConfig,
-			GoleakOptions:     []goleak.Option{goleak.IgnoreCurrent()},
-			Skip: []string{
-				// the following tests are skipped, because they need a valid credential file and token file
-				// required for oauth2 authorisation in order to create a google-sheet client to work properly.
-				"TestSource_Open_ResumeAtPosition",
-				"TestDestination_WriteAsync_Success",
-				"TestDestination_WriteOrWriteAsync",
-				"TestDestination_Write_Success",
-				"TestSource_Read_Success",
-				"TestSource_Read_Timeout",
+	ctx := context.Background()
+	conf, err := config.Parse(sourceConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	client, err := config.NewOauthClient(credFilePath, tokenFilePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sheetService, err := sheets.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	clearSheet := func(t *testing.T) {
+		_, err := sheetService.Spreadsheets.Values.Clear(conf.GoogleSpreadsheetID, "1:1000", &sheets.ClearValuesRequest{}).Do()
+		if err != nil {
+			t.Errorf("error cleaning the sheet: %v", err.Error())
+		}
+	}
+
+	// clear sheet before starting the tests
+	clearSheet(t)
+	sdk.AcceptanceTest(t, AcceptanceTestDriver{
+		rand: rand.New(rand.NewSource(time.Now().UnixNano())), //nolint: gosec // only used for testing
+		ConfigurableAcceptanceTestDriver: sdk.ConfigurableAcceptanceTestDriver{
+			Config: sdk.ConfigurableAcceptanceTestDriverConfig{
+				Connector: sdk.Connector{
+					NewSpecification: Specification,
+					NewSource:        source.NewSource,
+					NewDestination:   destination.NewDestination,
+				},
+				SourceConfig:      sourceConfig,
+				DestinationConfig: destConfig,
+				BeforeTest: func(t *testing.T) {
+				},
+				GoleakOptions: []goleak.Option{goleak.IgnoreCurrent(), goleak.IgnoreTopFunction("internal/poll.runtime_pollWait")},
+				Skip: []string{
+					// skipped because it uses pre-written generateRecord function, which doesn't generate data in g sheets format
+					// leading to the test always failing
+					"TestDestination_WriteAsync_Success",
+				},
+				AfterTest: func(t *testing.T) {
+					// clear sheet after every test to ensure clean sheet for next test
+					offset = 0
+					clearSheet(t)
+				},
 			},
 		},
 	})
 }
 
-func getFilePath(path string) string {
-	wd, _ := os.Getwd()
-	for !strings.HasSuffix(wd, path) {
-		wd = filepath.Dir(wd)
+type AcceptanceTestDriver struct {
+	rand *rand.Rand
+	sdk.ConfigurableAcceptanceTestDriver
+}
+
+func (d AcceptanceTestDriver) WriteToSource(t *testing.T, recs []sdk.Record) []sdk.Record {
+	if d.Connector().NewDestination == nil {
+		t.Fatal("connector is missing the field NewDestination, either implement the destination or overwrite the driver method Write")
 	}
-	return wd
+
+	is := is.New(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// writing something to the destination should result in the same record
+	// being produced by the source
+	dest := d.Connector().NewDestination()
+	// write to source and not the destination
+	destConfig := d.SourceConfig(t)
+	destConfig["sheetName"] = sheetName
+	err := dest.Configure(ctx, destConfig)
+	is.NoErr(err)
+
+	err = dest.Open(ctx)
+	is.NoErr(err)
+	recs = d.generateRecords(len(recs))
+	// try to write using WriteAsync and fallback to Write if it's not supported
+	err = d.writeAsync(ctx, dest, recs)
+	is.NoErr(err)
+
+	cancel() // cancel context to simulate stop
+	err = dest.Teardown(context.Background())
+	is.NoErr(err)
+	return recs
+}
+
+func (d AcceptanceTestDriver) generateRecords(count int) []sdk.Record {
+	records := make([]sdk.Record, count)
+	for i := range records {
+		records[i] = d.generateRecord(offset + i)
+	}
+	offset += len(records)
+	return records
+}
+
+func (d AcceptanceTestDriver) generateRecord(i int) sdk.Record {
+	payload := fmt.Sprintf(`["%s","%s","%s","%s"]`, d.randString(32), d.randString(32), d.randString(32), d.randString(32))
+	i++
+	return sdk.Record{
+		Position:  sdk.Position(fmt.Sprintf(`{"row_offset":%v}`, i)),
+		Metadata:  nil,
+		CreatedAt: time.Time{},
+		Key:       sdk.RawData(fmt.Sprintf("A%v", i)),
+		Payload:   sdk.RawData(payload),
+	}
+}
+
+// randString generates a random string of length n.
+// (source: https://stackoverflow.com/a/31832326)
+func (d AcceptanceTestDriver) randString(n int) string {
+	const letterBytes = `0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz`
+	const (
+		letterIdxBits = 6                    // 6 bits to represent a letter index
+		letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
+		letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
+	)
+	sb := strings.Builder{}
+	sb.Grow(n)
+	// src.Int63() generates 63 random bits, enough for letterIdxMax characters
+	for i, cache, remain := n-1, d.rand.Int63(), letterIdxMax; i >= 0; {
+		if remain == 0 {
+			cache, remain = d.rand.Int63(), letterIdxMax
+		}
+		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
+			sb.WriteByte(letterBytes[idx])
+			i--
+		}
+		cache >>= letterIdxBits
+		remain--
+	}
+	return sb.String()
+}
+
+// writeAsync writes records to destination using Destination.WriteAsync.
+func (d AcceptanceTestDriver) writeAsync(ctx context.Context, dest sdk.Destination, records []sdk.Record) error {
+	var waitForAck sync.WaitGroup
+	var ackErr error
+
+	for _, r := range records {
+		waitForAck.Add(1)
+		ack := func(err error) error {
+			defer waitForAck.Done()
+			if ackErr == nil { // only overwrite a nil error
+				ackErr = err
+			}
+			return nil
+		}
+		err := dest.WriteAsync(ctx, r, ack)
+		if err != nil {
+			return err
+		}
+	}
+
+	// flush to make sure the records get written to the destination
+	err := dest.Flush(ctx)
+	if err != nil {
+		return err
+	}
+
+	// TODO create timeout for wait to prevent deadlock for badly written connectors
+	waitForAck.Wait()
+	if ackErr != nil {
+		return ackErr
+	}
+
+	// records were successfully written
+	return nil
 }

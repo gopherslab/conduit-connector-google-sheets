@@ -54,7 +54,6 @@ type Config struct {
 // Parse attempts to parse the configurations into a Config struct that Destination could utilize
 func Parse(cfg map[string]string) (Config, error) {
 	sharedConfig, err := config.Parse(cfg)
-	fmt.Println(err)
 	if err != nil {
 		return Config{}, err
 	}

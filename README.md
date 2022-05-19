@@ -2,7 +2,22 @@
 
 ###  General
 The Conduit Connector for [Google Sheets](https://github.com/gopherslab/conduit-connector-google-sheets) fetches all the records from a particular sheet.
+To run the integration tests under acceptance_test.go, These env variables need to be set:
+`CONDUIT_GOOGLE_CREDENTIAL_JSON`: this env variable should contain the google service account's credentials JSON
+`CONDUIT_GOOGLE_TOKEN_JSON`: this env variable should contain the oauth2 token JSON containing at least `refresh_token`.
+`CONDUIT_GOOGLE_SHEET_URL`: the Google sheet URL, used to get the spreadsheet id and sheet id
+`CONDUIT_GOOGLE_SHEET_NAME`: the name of the target sheet, this is required to be able to write to the sheet
 
+If any of these values are not set, the integration tests will fail.
+
+Sample execution:
+```shell
+CONDUIT_GOOGLE_CREDENTIAL_JSON=$(cat testdata/dummy_cred.json) \
+CONDUIT_GOOGLE_TOKEN_JSON=$(cat testdata/dummy_token.json) \
+CONDUIT_GOOGLE_SHEET_URL=https://docs.google.com/spreadsheets/d/1SJ5x-gyC0iWMjq6o9WMz21kBk5P8m4GtP0loaRcpNJU/edit#gid=0 \
+CONDUIT_GOOGLE_SHEET_NAME=Sheet1 \
+make test
+```
 
 ## Google Sheet Source
 
@@ -27,12 +42,12 @@ The Google Sheets connector stores the the last row of the fetched sheet data as
 
 The config passed to `Configure` in source connector can contain the following fields.
 
-| name                  | description                                                                            | required  | example             |
-|-----------------------|----------------------------------------------------------------------------------------|-----------|---------------------|
-| `google.credentialsFile`     |  Path to credentials file which can be downloaded from Google Cloud Platform(in .json format) to authorise the user.                                                                     | yes       | "path://to/credential/file" |
-| `google.tokensFile`          | Path to file in .json format which includes the `access_token`, `token_type`, `refresh_token` and `expiry`.                                                                   | yes       | "path://to/token/file"       |
-| `google.sheetsURL`          | URL of the google spreadsheet(copy the entire url from the address bar).                                                                  | yes       | "https://docs.google.com/spreadsheets/d/dummy_spreadsheet_id/edit#gid=0"       |
-| `pollingPeriod`       | time interval between two consecutive hits. Can be in format as s for seconds, m for minutes, h for hours (for eg: 2s; 2m; 2h)  | no        | "6s"            |
+| name                         | description                                                                                                                    | required | example                                                                  |
+|------------------------------|--------------------------------------------------------------------------------------------------------------------------------|----------|--------------------------------------------------------------------------|
+| `google.credentialsFile`     | Path to credentials file which can be downloaded from Google Cloud Platform(in .json format) to authorise the user.            | yes      | "path://to/credential/file"                                              |
+| `google.tokensFile`          | Path to file in .json format which includes the `access_token`, `token_type`, `refresh_token` and `expiry`.                    | yes      | "path://to/token/file"                                                   |
+| `google.sheetsURL`           | URL of the google spreadsheet(copy the entire url from the address bar).                                                       | yes      | "https://docs.google.com/spreadsheets/d/dummy_spreadsheet_id/edit#gid=0" |
+| `pollingPeriod`              | time interval between two consecutive hits. Can be in format as s for seconds, m for minutes, h for hours (for eg: 2s; 2m; 2h) | no       | "6s"                                                                     |
 
 
 ### Known Limitations
@@ -56,14 +71,14 @@ The destination writer maintains a configurable buffer(default length is 100), o
 The config passed to `Configure` in destination connector can contain the following fields.
 
 
-| name                  | description                                                                            | required  | example             |
-|-----------------------|----------------------------------------------------------------------------------------|-----------|---------------------|
-| `google.credentialsFile`     |  Path to credentials file which can be downloaded from Google Cloud Platform(in .json format) to authorise the user.                                                                     | yes       | "path://to/credential/file" |
-| `google.tokensFile`          | Path to file in .json format which includes the `access_token`, `token_type`, `refresh_token` and `expiry`.                                                                   | yes       | "path://to/token/file"       |
-| `google.sheetsURL`          | URL of the google spreadsheet(copy the entire url from the address bar).                                                                  | yes       | "https://docs.google.com/spreadsheets/d/dummy_spreadsheet_id/edit#gid=0"       |
-| `sheetName`          | Sheet name on which the data is to be appended.                                                                  | yes       | "sheetName"       |
-| `insertDataOption`       | How the data be inserted in google sheets(i.e either `OVERWRITE` or `INSERT_ROWS`). The default value for `insertDataOption` is `INSERT_ROWS`   | no        | "insertDataOption"            |
-| `bufferSize`          | Minumun number of records in buffer to hit the google sheet api. The `buffer_size` should be less than the `maxBufferSize` whose default value is `100`, otherwise an error is thrown.                                                                 | no       | "bufferSize"            |
+| name                      | description                                                                                                                                                                            | required  | example                                                                  |
+|---------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------|--------------------------------------------------------------------------|
+| `google.credentialsFile`  | Path to credentials file which can be downloaded from Google Cloud Platform(in .json format) to authorise the user.                                                                    | yes       | "path://to/credential/file"                                              |
+| `google.tokensFile`       | Path to file in .json format which includes the `access_token`, `token_type`, `refresh_token` and `expiry`.                                                                            | yes       | "path://to/token/file"                                                   |
+| `google.sheetsURL`        | URL of the google spreadsheet(copy the entire url from the address bar).                                                                                                               | yes       | "https://docs.google.com/spreadsheets/d/dummy_spreadsheet_id/edit#gid=0" |
+| `sheetName`               | Sheet name on which the data is to be appended.                                                                                                                                        | yes       | "sheetName"                                                              |
+| `insertDataOption`        | How the data be inserted in google sheets(i.e either `OVERWRITE` or `INSERT_ROWS`). The default value for `insertDataOption` is `INSERT_ROWS`                                          | no        | "insertDataOption"                                                       |
+| `bufferSize`              | Minumun number of records in buffer to hit the google sheet api. The `buffer_size` should be less than the `maxBufferSize` whose default value is `100`, otherwise an error is thrown. | no       | "bufferSize"                                                             |
 
 
 

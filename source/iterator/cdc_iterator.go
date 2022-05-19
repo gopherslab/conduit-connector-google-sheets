@@ -178,8 +178,6 @@ func (c *SheetsIterator) getSheetRecords(ctx context.Context) ([]sdk.Record, err
 		return nil, err
 	}
 
-	valueRange := res.ValueRanges[0].ValueRange
-
 	if res.HTTPStatusCode == http.StatusTooManyRequests {
 		c.retryCount++
 		duration := time.Duration(c.retryCount * int64(c.pollingPeriod)) // exponential back off
@@ -195,26 +193,31 @@ func (c *SheetsIterator) getSheetRecords(ctx context.Context) ([]sdk.Record, err
 		return nil, fmt.Errorf("non 200 status code received(%v)", res.HTTPStatusCode)
 	}
 
-	responseData := valueRange.Values
+	records := make([]sdk.Record, 0)
 
-	records := make([]sdk.Record, 0, len(responseData))
-	for index, val := range responseData {
-		rawData, err := json.Marshal(val)
-		if err != nil {
-			return records, fmt.Errorf("error marshaling the map: %w", err)
-		}
-		rowOffset := c.rowOffset + int64(index) + 1
-		lastRowPosition := position.SheetPosition{
-			RowOffset: rowOffset,
-		}
+	for i := range res.ValueRanges {
+		valueRange := res.ValueRanges[i].ValueRange
 
-		records = append(records, sdk.Record{
-			Position:  lastRowPosition.RecordPosition(),
-			Metadata:  nil,
-			CreatedAt: time.Now(),
-			Key:       sdk.RawData(fmt.Sprintf("A%d", rowOffset)),
-			Payload:   sdk.RawData(rawData),
-		})
+		values := valueRange.Values
+
+		for index, val := range values {
+			rawData, err := json.Marshal(val)
+			if err != nil {
+				return records, fmt.Errorf("error marshaling the map: %w", err)
+			}
+			rowOffset := c.rowOffset + int64(index) + 1
+			lastRowPosition := position.SheetPosition{
+				RowOffset: rowOffset,
+			}
+
+			records = append(records, sdk.Record{
+				Position:  lastRowPosition.RecordPosition(),
+				Metadata:  nil,
+				CreatedAt: time.Now(),
+				Key:       sdk.RawData(fmt.Sprintf("A%d", rowOffset)),
+				Payload:   sdk.RawData(rawData),
+			})
+		}
 	}
 	c.retryCount = 0
 	return records, nil

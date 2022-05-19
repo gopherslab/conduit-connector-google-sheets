@@ -75,27 +75,11 @@ func Parse(config map[string]string) (Config, error) {
 	}
 
 	// parse files and URL
-
-	// parse credentials.json
-	credBytes, err := ioutil.ReadFile(credFile)
+	authClient, err := NewOauthClient(credFile, tokenFile)
 	if err != nil {
-		return Config{}, fmt.Errorf("unable to read client secret file: %w", err)
+		return Config{}, err
 	}
 
-	oauthConfig, err := google.ConfigFromJSON(credBytes, scopes...)
-	if err != nil {
-		return Config{}, fmt.Errorf("unable to parse client secret file to config: %w", err)
-	}
-
-	// parse tokens file
-	var token *oauth2.Token
-	tokenBytes, err := ioutil.ReadFile(tokenFile)
-	if err != nil {
-		return Config{}, fmt.Errorf("unable to read tokens file: %w", err)
-	}
-	if err := json.Unmarshal(tokenBytes, &token); err != nil {
-		return Config{}, fmt.Errorf("unable to unmarshal tokens file: %w", err)
-	}
 	// parse sheets url
 	spreadSheetID, sheetID, err := parseSheetURL(sheetURL)
 	if err != nil {
@@ -105,7 +89,7 @@ func Parse(config map[string]string) (Config, error) {
 	cfg := Config{
 		// for some reason using cancellable context causes refresh functionality to stop working
 		// using context.Background to avoid that issue
-		Client:              oauthConfig.Client(context.Background(), token),
+		Client:              authClient,
 		GoogleSheetID:       sheetID,
 		GoogleSpreadsheetID: spreadSheetID,
 	}
@@ -129,4 +113,28 @@ func parseSheetURL(url string) (string, int64, error) {
 		return "", 0, fmt.Errorf("error converting sheet id to int: %w", err)
 	}
 	return stringMatches[1], sheetID, nil // spreadsheetID, sheetID, error
+}
+
+func NewOauthClient(credFile, tokenFile string) (*http.Client, error) {
+	// parse credentials.json
+	credBytes, err := ioutil.ReadFile(credFile)
+	if err != nil {
+		return nil, fmt.Errorf("unable to read client secret file: %w", err)
+	}
+
+	oauthConfig, err := google.ConfigFromJSON(credBytes, scopes...)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse client secret file to config: %w", err)
+	}
+
+	// parse tokens file
+	var token *oauth2.Token
+	tokenBytes, err := ioutil.ReadFile(tokenFile)
+	if err != nil {
+		return nil, fmt.Errorf("unable to read tokens file: %w", err)
+	}
+	if err := json.Unmarshal(tokenBytes, &token); err != nil {
+		return nil, fmt.Errorf("unable to unmarshal tokens file: %w", err)
+	}
+	return oauthConfig.Client(context.Background(), token), nil
 }

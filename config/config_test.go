@@ -100,7 +100,6 @@ func TestParse(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg, err := Parse(tt.config)
 			if err != nil {
-				fmt.Println(fmt.Errorf("%w", tt.err))
 				assert.EqualError(t, err, tt.err.Error())
 			} else {
 				assert.NoError(t, err)
