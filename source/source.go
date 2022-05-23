@@ -67,9 +67,7 @@ func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
 	}
 
 	s.iterator, err = iterator.NewSheetsIterator(ctx, s.client, pos,
-		s.configData.GoogleSpreadsheetID,
-		s.configData.GoogleSheetID,
-		s.configData.PollingPeriod,
+		s.configData,
 	)
 
 	if err != nil {

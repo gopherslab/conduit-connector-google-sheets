@@ -18,23 +18,20 @@ package iterator
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/conduitio/conduit-connector-google-sheets/source/config"
+	googlesheets "github.com/conduitio/conduit-connector-google-sheets/source/google_sheets"
 	"github.com/conduitio/conduit-connector-google-sheets/source/position"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
-	"google.golang.org/api/option"
-	sheets "google.golang.org/api/sheets/v4"
 	"gopkg.in/tomb.v2"
 )
 
 type SheetsIterator struct {
-	client        *http.Client
-	nextRun       time.Time
+	sheetsClient  googlesheets.SheetsClient
 	rowOffset     int64
 	tomb          *tomb.Tomb
 	ticker        *time.Ticker
@@ -42,7 +39,6 @@ type SheetsIterator struct {
 	buffer        chan sdk.Record
 	spreadsheetID string
 	sheetID       int64
-	retryCount    int64
 	pollingPeriod time.Duration
 }
 
@@ -51,20 +47,18 @@ type SheetsIterator struct {
 func NewSheetsIterator(ctx context.Context,
 	client *http.Client,
 	tp position.SheetPosition,
-	spreadsheetID string,
-	sheetID int64,
-	pollingPeriod time.Duration) (*SheetsIterator, error) {
+	config config.Config) (*SheetsIterator, error) {
 	tmbWithCtx, ctx := tomb.WithContext(ctx)
 	cdc := &SheetsIterator{
-		client:        client,
+		sheetsClient:  *googlesheets.NewClient(client, config, tp),
 		rowOffset:     tp.RowOffset,
 		tomb:          tmbWithCtx,
 		caches:        make(chan []sdk.Record, 1),
 		buffer:        make(chan sdk.Record, 1),
-		ticker:        time.NewTicker(pollingPeriod),
-		spreadsheetID: spreadsheetID,
-		sheetID:       sheetID,
-		pollingPeriod: pollingPeriod,
+		ticker:        time.NewTicker(config.PollingPeriod),
+		spreadsheetID: config.GoogleSpreadsheetID,
+		sheetID:       config.GoogleSheetID,
+		pollingPeriod: config.PollingPeriod,
 	}
 
 	cdc.tomb.Go(cdc.startIterator(ctx))
@@ -82,13 +76,14 @@ func (c *SheetsIterator) startIterator(ctx context.Context) func() error {
 			case <-c.tomb.Dying():
 				return c.tomb.Err()
 			case <-c.ticker.C:
-				records, err := c.getSheetRecords(ctx)
+				records, err := c.sheetsClient.GetSheetRecords(ctx, c.rowOffset)
 				if err != nil {
 					return err
 				}
 				if len(records) == 0 {
 					continue
 				}
+
 				select {
 				case c.caches <- records:
 					pos, err := position.ParseRecordPosition(records[len(records)-1].Position)
@@ -146,79 +141,4 @@ func (c *SheetsIterator) Next(ctx context.Context) (sdk.Record, error) {
 func (c *SheetsIterator) Stop() {
 	c.ticker.Stop()
 	c.tomb.Kill(errors.New("iterator stopped"))
-}
-
-// getSheetRecords returns the list of records up to a maximum of 1000 rows(default limit)
-// added after the row offset of last successfully read record
-func (c *SheetsIterator) getSheetRecords(ctx context.Context) ([]sdk.Record, error) {
-	if c.nextRun.After(time.Now()) {
-		return nil, nil
-	}
-
-	sheetService, err := sheets.NewService(ctx, option.WithHTTPClient(c.client))
-	if err != nil {
-		return nil, err
-	}
-	var s sheets.DataFilter
-	dataFilters := make([]*sheets.DataFilter, 0)
-	s.GridRange = &sheets.GridRange{
-		SheetId:       c.sheetID,
-		StartRowIndex: c.rowOffset,
-	}
-	dataFilters = append(dataFilters, &s)
-	valueRenderOption := ""
-	dateTimeRenderOption := "FORMATTED_STRING"
-	rbt := &sheets.BatchGetValuesByDataFilterRequest{
-		ValueRenderOption:    valueRenderOption,
-		DataFilters:          dataFilters,
-		DateTimeRenderOption: dateTimeRenderOption,
-	}
-	res, err := sheetService.Spreadsheets.Values.BatchGetByDataFilter(c.spreadsheetID, rbt).Context(ctx).Do()
-	if err != nil {
-		return nil, err
-	}
-
-	if res.HTTPStatusCode == http.StatusTooManyRequests {
-		c.retryCount++
-		duration := time.Duration(c.retryCount * int64(c.pollingPeriod)) // exponential back off
-		c.nextRun = time.Now().Add(duration)
-		sdk.Logger(ctx).Error().
-			Int64("retry_count", c.retryCount).
-			Float64("wait_duration", duration.Seconds()).
-			Msg("exponential back off, rate limit exceeded")
-		return nil, nil
-	}
-
-	if res.HTTPStatusCode != http.StatusOK {
-		return nil, fmt.Errorf("non 200 status code received(%v)", res.HTTPStatusCode)
-	}
-
-	records := make([]sdk.Record, 0)
-
-	for i := range res.ValueRanges {
-		valueRange := res.ValueRanges[i].ValueRange
-
-		values := valueRange.Values
-
-		for index, val := range values {
-			rawData, err := json.Marshal(val)
-			if err != nil {
-				return records, fmt.Errorf("error marshaling the map: %w", err)
-			}
-			rowOffset := c.rowOffset + int64(index) + 1
-			lastRowPosition := position.SheetPosition{
-				RowOffset: rowOffset,
-			}
-
-			records = append(records, sdk.Record{
-				Position:  lastRowPosition.RecordPosition(),
-				Metadata:  nil,
-				CreatedAt: time.Now(),
-				Key:       sdk.RawData(fmt.Sprintf("A%d", rowOffset)),
-				Payload:   sdk.RawData(rawData),
-			})
-		}
-	}
-	c.retryCount = 0
-	return records, nil
 }
