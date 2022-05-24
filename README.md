@@ -29,7 +29,8 @@ CONDUIT_GOOGLE_SHEET_NAME=Sheet1 \
 make test
 ```
 
-### Generating credentials
+## Generating credentials
+
 
 ## Google Sheet Source
 

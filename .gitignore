@@ -6,6 +6,7 @@
 *.dylib
 *.DS_Store
 conduit-connector-google-sheets
+google-token-gen
 main
 
 # Test binary, built with `go test -c`
