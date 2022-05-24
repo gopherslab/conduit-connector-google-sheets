@@ -19,11 +19,11 @@ package iterator
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
-	"github.com/conduitio/conduit-connector-google-sheets/source/config"
-	googlesheets "github.com/conduitio/conduit-connector-google-sheets/source/google_sheets"
+	"github.com/conduitio/conduit-connector-google-sheets/sheets"
 	"github.com/conduitio/conduit-connector-google-sheets/source/position"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
@@ -31,15 +31,12 @@ import (
 )
 
 type SheetsIterator struct {
-	sheetsClient  googlesheets.SheetsClient
-	rowOffset     int64
-	tomb          *tomb.Tomb
-	ticker        *time.Ticker
-	caches        chan []sdk.Record
-	buffer        chan sdk.Record
-	spreadsheetID string
-	sheetID       int64
-	pollingPeriod time.Duration
+	sheets    *sheets.BatchReader
+	rowOffset int64
+	tomb      *tomb.Tomb
+	ticker    *time.Ticker
+	caches    chan []sdk.Record
+	buffer    chan sdk.Record
 }
 
 // NewSheetsIterator creates a new instance of sheets iterator and starts polling google sheets api for new changes
@@ -47,18 +44,21 @@ type SheetsIterator struct {
 func NewSheetsIterator(ctx context.Context,
 	client *http.Client,
 	tp position.SheetPosition,
-	config config.Config) (*SheetsIterator, error) {
+	args sheets.BatchReaderArgs,
+) (*SheetsIterator, error) {
 	tmbWithCtx, ctx := tomb.WithContext(ctx)
+	sheets, err := sheets.NewBatchReader(ctx, client, args)
+	if err != nil {
+		return nil, fmt.Errorf("error initializing sheets BatchReader: %w", err)
+	}
+
 	cdc := &SheetsIterator{
-		sheetsClient:  *googlesheets.NewClient(client, config, tp),
-		rowOffset:     tp.RowOffset,
-		tomb:          tmbWithCtx,
-		caches:        make(chan []sdk.Record, 1),
-		buffer:        make(chan sdk.Record, 1),
-		ticker:        time.NewTicker(config.PollingPeriod),
-		spreadsheetID: config.GoogleSpreadsheetID,
-		sheetID:       config.GoogleSheetID,
-		pollingPeriod: config.PollingPeriod,
+		sheets:    sheets,
+		rowOffset: tp.RowOffset,
+		tomb:      tmbWithCtx,
+		caches:    make(chan []sdk.Record, 1),
+		buffer:    make(chan sdk.Record, 1),
+		ticker:    time.NewTicker(args.PollingPeriod),
 	}
 
 	cdc.tomb.Go(cdc.startIterator(ctx))
@@ -76,14 +76,13 @@ func (c *SheetsIterator) startIterator(ctx context.Context) func() error {
 			case <-c.tomb.Dying():
 				return c.tomb.Err()
 			case <-c.ticker.C:
-				records, err := c.sheetsClient.GetSheetRecords(ctx, c.rowOffset)
+				records, err := c.sheets.GetSheetRecords(ctx, c.rowOffset)
 				if err != nil {
 					return err
 				}
 				if len(records) == 0 {
 					continue
 				}
-
 				select {
 				case c.caches <- records:
 					pos, err := position.ParseRecordPosition(records[len(records)-1].Position)

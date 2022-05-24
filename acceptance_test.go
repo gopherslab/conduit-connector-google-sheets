@@ -41,6 +41,8 @@ var (
 	credFilePath  string
 	tokenFilePath string
 	sheetURL      string
+	spreadsheetID string
+	sheetID       int64
 )
 
 func TestAcceptance(t *testing.T) {
@@ -97,13 +99,12 @@ func TestAcceptance(t *testing.T) {
 	}
 
 	destConfig := map[string]string{
-		"google.credentialsFile": credFilePath,
-		"google.tokensFile":      tokenFilePath,
-		"google.sheetsURL":       sheetURL,
-		"sheetName":              sheetName,
-		"valueInputOption":       "USER_ENTERED",
-		"insertDataOption":       "INSERT_ROWS",
-		"bufferSize":             "10",
+		"google.credentialsFile":  credFilePath,
+		"google.tokensFile":       tokenFilePath,
+		"google.sheetsURL":        sheetURL,
+		"google.sheetName":        sheetName,
+		"google.valueInputOption": "USER_ENTERED",
+		"bufferSize":              "10",
 	}
 
 	ctx := context.Background()
@@ -111,6 +112,9 @@ func TestAcceptance(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	spreadsheetID = conf.GoogleSpreadsheetID
+	sheetID = conf.GoogleSheetID
 
 	client, err := config.NewOauthClient(credFilePath, tokenFilePath)
 	if err != nil {
@@ -178,7 +182,7 @@ func (d AcceptanceTestDriver) WriteToSource(t *testing.T, recs []sdk.Record) []s
 	dest := d.Connector().NewDestination()
 	// write to source and not the destination
 	destConfig := d.SourceConfig(t)
-	destConfig["sheetName"] = sheetName
+	destConfig["google.sheetName"] = sheetName
 	err := dest.Configure(ctx, destConfig)
 	is.NoErr(err)
 
@@ -208,10 +212,10 @@ func (d AcceptanceTestDriver) generateRecord(i int) sdk.Record {
 	payload := fmt.Sprintf(`["%s","%s","%s","%s"]`, d.randString(32), d.randString(32), d.randString(32), d.randString(32))
 	i++
 	return sdk.Record{
-		Position:  sdk.Position(fmt.Sprintf(`{"row_offset":%v}`, i)),
+		Position:  sdk.Position(fmt.Sprintf(`{"row_offset":%v, "spreadsheet_id":%v, "sheet_id":%v}`, i, spreadsheetID, sheetID)),
 		Metadata:  nil,
 		CreatedAt: time.Time{},
-		Key:       sdk.RawData(fmt.Sprintf("A%v", i)),
+		Key:       sdk.RawData(fmt.Sprintf("%v", i)),
 		Payload:   sdk.RawData(payload),
 	}
 }
@@ -268,7 +272,6 @@ func (d AcceptanceTestDriver) writeAsync(ctx context.Context, dest sdk.Destinati
 		return err
 	}
 
-	// TODO create timeout for wait to prevent deadlock for badly written connectors
 	waitForAck.Wait()
 	if ackErr != nil {
 		return ackErr

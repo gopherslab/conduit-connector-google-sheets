@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package config
+package destination
 
 import (
 	"fmt"
@@ -24,31 +24,40 @@ import (
 )
 
 const (
-	// KeySheetRange is the name of the sheet needed to fetch data.
-	KeySheetName = "sheetName"
+	// KeySheetName is the name of the sheet needed to fetch data.
+	KeySheetName = "google.sheetName"
 
 	// KeyBufferSize is the config name for buffer size.
 	KeyBufferSize = "bufferSize"
 
 	// KeyValueInputOption is the config name for how the input data
-	// should be inserted. This could be INSERT_ROWS or OVERWRITE
-	KeyInsertDataOption = "insertDataOption"
+	// should be inserted.
+	KeyValueInputOption = "google.valueInputOption"
 
-	// DefaultKeyInsertDataOption is the value InsertDataOption assumes when the config omits
-	// the InsertDataOption parameter
-	DefaultKeyInsertDataOption = "INSERT_ROWS"
+	// KeyMaxRetries is the config key for max retry
+	KeyMaxRetries = "maxRetries"
+
+	// defaultValueInputOption is the value ValueInputOption assumes when the config omits
+	// the ValueInputOption parameter
+	defaultValueInputOption = "USER_ENTERED"
 
 	// maxBufferSize determines maximum buffer size a config can accept.
 	// When config with bigger buffer size is parsed, an error is returned.
-	maxBufferSize uint64 = 100
+	maxBufferSize = 100
+
+	defaultMaxRetries = "3"
 )
 
 // Config represents destination configuration with Google-Sheet configurations
 type Config struct {
 	config.Config
-	SheetName        string
-	InsertDataOption string
+	SheetName string
+	// How the data is to be interpreted by the google sheets
+	// In case of USER_ENTERED, the data is inserted similar to data insertion from browser
+	// In RAW, the data is inserted without any parsing
+	ValueInputOption string
 	BufferSize       uint64
+	MaxRetries       uint64
 }
 
 // Parse attempts to parse the configurations into a Config struct that Destination could utilize
@@ -63,14 +72,20 @@ func Parse(cfg map[string]string) (Config, error) {
 		return Config{}, requiredConfigErr(KeySheetName)
 	}
 
-	sheetDataOption := cfg[KeyInsertDataOption]
-	if sheetDataOption == "" {
-		sheetDataOption = DefaultKeyInsertDataOption
+	sheetValueOption := cfg[KeyValueInputOption]
+	if sheetValueOption == "" {
+		sheetValueOption = defaultValueInputOption
+	}
+	if sheetValueOption != "RAW" && sheetValueOption != "USER_ENTERED" {
+		return Config{}, fmt.Errorf(
+			"invalid value (%s) for `%s` config received, valid values: `RAW`, `USER_ENTERED`",
+			KeyValueInputOption, sheetValueOption,
+		)
 	}
 
 	bufferSizeString := cfg[KeyBufferSize]
 	if bufferSizeString == "" {
-		bufferSizeString = fmt.Sprintf("%d", maxBufferSize)
+		bufferSizeString = fmt.Sprintf("%v", maxBufferSize)
 	}
 
 	bufferSize, err := strconv.ParseUint(bufferSizeString, 10, 64)
@@ -90,11 +105,25 @@ func Parse(cfg map[string]string) (Config, error) {
 		)
 	}
 
+	retriesString := cfg[KeyMaxRetries]
+	if retriesString == "" {
+		retriesString = defaultMaxRetries
+	}
+
+	retries, err := strconv.ParseUint(retriesString, 10, 64)
+	if err != nil {
+		return Config{}, fmt.Errorf(
+			"%q config value should be a positive integer",
+			KeyMaxRetries,
+		)
+	}
+
 	destinationConfig := Config{
 		Config:           sharedConfig,
 		SheetName:        sheetName,
-		InsertDataOption: sheetDataOption,
+		ValueInputOption: sheetValueOption,
 		BufferSize:       bufferSize,
+		MaxRetries:       retries,
 	}
 
 	return destinationConfig, nil

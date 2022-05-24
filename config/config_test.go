@@ -25,7 +25,7 @@ import (
 )
 
 func TestParse(t *testing.T) {
-	filePath := getFilePath("conduit-connector-google-sheets")
+	filePath := getFilePath("conduit-connector-google-sheets") // Get project root path
 	validCredFile := fmt.Sprintf("%s/testdata/dummy_cred.json", filePath)
 	invalidCredFile := fmt.Sprintf("%s/testdata/dummy_invalid_cred.json", filePath)
 	tests := []struct {
@@ -99,13 +99,12 @@ func TestParse(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg, err := Parse(tt.config)
-			if err != nil {
+			if tt.err != nil {
 				assert.EqualError(t, err, tt.err.Error())
 			} else {
 				assert.NoError(t, err)
 				tt.want.Client = cfg.Client
 				assert.Equal(t, tt.want, cfg)
-				return
 			}
 		})
 	}

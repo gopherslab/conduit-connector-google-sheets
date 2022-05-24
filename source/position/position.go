@@ -24,7 +24,9 @@ import (
 )
 
 type SheetPosition struct {
-	RowOffset int64 `json:"row_offset"`
+	RowOffset     int64  `json:"row_offset"`
+	SpreadsheetID string `json:"spreadsheet_id"`
+	SheetID       int64  `json:"sheet_id"`
 }
 
 // ParseRecordPosition is used to parse the sdk.Position to SheetPosition type

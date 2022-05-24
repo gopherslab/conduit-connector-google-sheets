@@ -19,12 +19,9 @@ package destination
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"sync"
 
-	dConfig "github.com/conduitio/conduit-connector-google-sheets/destination/config"
-	"github.com/conduitio/conduit-connector-google-sheets/destination/writer"
-
+	"github.com/conduitio/conduit-connector-google-sheets/sheets"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
@@ -32,12 +29,12 @@ import (
 type Destination struct {
 	sdk.UnimplementedDestination
 
-	Buffer            []sdk.Record
-	AckCache          []sdk.AckFunc
-	Error             error
-	Client            *http.Client
-	Mutex             *sync.Mutex
-	DestinationConfig dConfig.Config
+	buffer   []sdk.Record
+	AckCache []sdk.AckFunc
+	err      error
+	mux      *sync.Mutex
+	config   Config
+	writer   *sheets.Writer
 }
 
 func NewDestination() sdk.Destination {
@@ -47,16 +44,16 @@ func NewDestination() sdk.Destination {
 // Configure parses and initializes the config.
 func (d *Destination) Configure(ctx context.Context,
 	cfg map[string]string) error {
-	sheetsConfig, err := dConfig.Parse(cfg)
+	sheetsConfig, err := Parse(cfg)
 	if err != nil {
 		return fmt.Errorf("failed parsing the config: %w", err)
 	}
 
-	d.DestinationConfig = dConfig.Config{
+	d.config = Config{
 		Config:           sheetsConfig.Config,
 		SheetName:        sheetsConfig.SheetName,
 		BufferSize:       sheetsConfig.BufferSize,
-		InsertDataOption: sheetsConfig.InsertDataOption,
+		ValueInputOption: sheetsConfig.ValueInputOption,
 	}
 
 	return nil
@@ -64,14 +61,24 @@ func (d *Destination) Configure(ctx context.Context,
 
 // Open makes sure everything is prepared to receive records.
 func (d *Destination) Open(ctx context.Context) error {
-	d.Mutex = &sync.Mutex{}
+	d.mux = &sync.Mutex{}
 
 	// initializing the buffer
-	d.Buffer = make([]sdk.Record, 0, d.DestinationConfig.BufferSize)
-	d.AckCache = make([]sdk.AckFunc, 0, d.DestinationConfig.BufferSize)
+	d.buffer = make([]sdk.Record, 0, d.config.BufferSize)
+	d.AckCache = make([]sdk.AckFunc, 0, d.config.BufferSize)
 
-	d.Client = d.DestinationConfig.Client
-
+	writer, err := sheets.NewWriter(
+		ctx,
+		d.config.Client,
+		d.config.GoogleSpreadsheetID,
+		d.config.SheetName,
+		d.config.ValueInputOption,
+		d.config.MaxRetries,
+	)
+	if err != nil {
+		return fmt.Errorf("unable to init writer: %w", err)
+	}
+	d.writer = writer
 	return nil
 }
 
@@ -80,45 +87,44 @@ func (d *Destination) Open(ctx context.Context) error {
 // records in it. This is done for performance reasons.
 func (d *Destination) WriteAsync(ctx context.Context,
 	r sdk.Record, ack sdk.AckFunc) error {
-	if d.Error != nil {
-		return d.Error
+	if d.err != nil {
+		return d.err
 	}
 
 	if len(r.Payload.Bytes()) == 0 {
 		return nil
 	}
 
-	d.Mutex.Lock()
-	defer d.Mutex.Unlock()
+	d.mux.Lock()
+	defer d.mux.Unlock()
 
-	d.Buffer = append(d.Buffer, r)
+	d.buffer = append(d.buffer, r)
 	d.AckCache = append(d.AckCache, ack)
 
-	if len(d.Buffer) >= int(d.DestinationConfig.BufferSize) {
+	if len(d.buffer) >= int(d.config.BufferSize) {
 		err := d.Flush(ctx)
 		if err != nil {
 			return fmt.Errorf("failed flushing the records: %w", err)
 		}
 	}
 
-	return d.Error
+	return d.err
 }
 
 // Flush writes the records when the buffer threshold is hit and after successful pushing the data
 // empties the record buffer and acknowledgment buffer for new records.
 func (d *Destination) Flush(ctx context.Context) error {
-	bufferedRecords := d.Buffer
-	d.Buffer = d.Buffer[:0]
+	bufferedRecords := d.buffer
+	d.buffer = d.buffer[:0]
 
-	err := writer.Writer(ctx, bufferedRecords,
-		d.DestinationConfig, d.Client)
+	err := d.writer.Write(ctx, bufferedRecords)
 	if err != nil {
-		d.Error = err
+		d.err = err
 	}
 
 	// call all the written records ackFunctions
 	for _, ack := range d.AckCache {
-		err := ack(d.Error)
+		err := ack(d.err)
 		if err != nil {
 			return fmt.Errorf("failed acknowledgement: %w", err)
 		}
@@ -130,13 +136,13 @@ func (d *Destination) Flush(ctx context.Context) error {
 
 // Teardown gracefully disconnects the client
 func (d *Destination) Teardown(ctx context.Context) error {
-	if d.Mutex != nil {
-		d.Mutex.Lock()
-		defer d.Mutex.Unlock()
-		if err := d.Flush(ctx); err != nil {
-			return fmt.Errorf("unable to teardown. Failed in flushing records: %w", err)
-		}
+	defer func() {
+		d.writer = nil
+	}()
+	if d.mux != nil {
+		d.mux.Lock()
+		defer d.mux.Unlock()
+		return d.Flush(ctx)
 	}
-	d.Client = nil
 	return nil
 }

@@ -22,8 +22,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/conduitio/conduit-connector-google-sheets/config"
-	sourceConfig "github.com/conduitio/conduit-connector-google-sheets/source/config"
+	"github.com/conduitio/conduit-connector-google-sheets/sheets"
 	"github.com/conduitio/conduit-connector-google-sheets/source/position"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
@@ -33,26 +32,22 @@ import (
 
 func TestNewSheetsIterator(t *testing.T) {
 	tests := []struct {
-		name    string
-		config  sourceConfig.Config
-		tp      position.SheetPosition
-		isError bool
+		name string
+		args sheets.BatchReaderArgs
+		tp   position.SheetPosition
+		err  error
 	}{
 		{
 			name: "NewSheetsIterator with RowOffset=0",
-			config: sourceConfig.Config{
-				Config: config.Config{
-					GoogleSpreadsheetID: "SPREADSHEET_ID",
-				},
+			args: sheets.BatchReaderArgs{
+				SpreadsheetID: "SPREADSHEET_ID",
 				PollingPeriod: time.Millisecond,
 			},
 			tp: position.SheetPosition{RowOffset: 0},
 		}, {
 			name: "NewSheetsIterator without SheetID",
-			config: sourceConfig.Config{
-				Config: config.Config{
-					GoogleSpreadsheetID: "SPREADSHEET_ID",
-				},
+			args: sheets.BatchReaderArgs{
+				SpreadsheetID: "SPREADSHEET_ID",
 				PollingPeriod: time.Millisecond,
 			},
 			tp: position.SheetPosition{
@@ -62,9 +57,9 @@ func TestNewSheetsIterator(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			res, err := NewSheetsIterator(context.Background(), &http.Client{}, tt.tp, tt.config)
-			if tt.isError {
-				assert.NotNil(t, err)
+			res, err := NewSheetsIterator(context.Background(), &http.Client{}, tt.tp, tt.args)
+			if tt.err != nil {
+				assert.EqualError(t, err, tt.err.Error())
 			} else {
 				assert.NotNil(t, res)
 				assert.NotNil(t, res.caches)
@@ -100,74 +95,6 @@ func TestFlush(t *testing.T) {
 			cdc.tomb.Kill(randomErr)
 		}
 	}
-}
-
-/*
-func TestGetSheetRecords(t *testing.T) {
-	ctx := context.Background()
-	token := &oauth2.Token{
-		AccessToken:  "ACCESS_TOKEN",
-		TokenType:    "Bearer",
-		RefreshToken: "REFRESH_TOKEN",
-		Expiry:       time.Time{},
-	}
-
-	var authCfg *oauth2.Config
-	gclient := authCfg.Client(ctx, token)
-
-	cdc := &SheetsIterator{
-		sheetID:       0,
-		spreadsheetID: "1ANUB)NS*765%L-NDB",
-		rowOffset:     0,
-		client:        gclient,
-	}
-
-	test := testHandler{}
-
-	t.Run("", func(t *testing.T) {
-		recs, _ := cdc.getSheetRecords(ctx)
-		if test.isError {
-			assert.Len(t, recs, 1)
-			assert.Equal(t, test.expected, test.record)
-		}
-	})
-}
-
-type testHandler struct {
-	record   []sdk.Record
-	isError  bool
-	expected []sdk.Record
-}
-
-func TestGetSheetRecords_RateLimit(t *testing.T) {
-	// in case of nextRun being set later than now, no processing should occur
-	cdc := &SheetsIterator{
-		nextRun: time.Now().Add(time.Minute),
-	}
-	recs, err := cdc.getSheetRecords(context.Background())
-	assert.Nil(t, err)
-	assert.Nil(t, recs)
-}
-
-func TestNext(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	tmbWithCtx, _ := tomb.WithContext(ctx)
-	cdc := &SheetsIterator{
-		buffer: make(chan sdk.Record, 1),
-		caches: make(chan []sdk.Record, 1),
-		tomb:   tmbWithCtx,
-	}
-	cdc.tomb.Go(cdc.flush)
-
-	in := sdk.Record{Position: []byte("some_position")}
-	cdc.caches <- []sdk.Record{in}
-	out, err := cdc.Next(ctx)
-	assert.NoError(t, err)
-	assert.Equal(t, in, out)
-	cancel()
-	out, err = cdc.Next(ctx)
-	assert.EqualError(t, err, ctx.Err().Error())
-	assert.Empty(t, out)
 }
 
 func TestHasNext(t *testing.T) {
@@ -211,4 +138,24 @@ func TestStreamIterator_Stop(t *testing.T) {
 	cdc.Stop()
 	assert.False(t, cdc.tomb.Alive())
 }
-*/
+
+func TestNext(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	tmbWithCtx, _ := tomb.WithContext(ctx)
+	cdc := &SheetsIterator{
+		buffer: make(chan sdk.Record, 1),
+		caches: make(chan []sdk.Record, 1),
+		tomb:   tmbWithCtx,
+	}
+	cdc.tomb.Go(cdc.flush)
+
+	in := sdk.Record{Position: []byte("some_position")}
+	cdc.caches <- []sdk.Record{in}
+	out, err := cdc.Next(ctx)
+	assert.NoError(t, err)
+	assert.Equal(t, in, out)
+	cancel()
+	out, err = cdc.Next(ctx)
+	assert.EqualError(t, err, ctx.Err().Error())
+	assert.Empty(t, out)
+}

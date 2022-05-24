@@ -18,9 +18,8 @@ package googlesheets
 
 import (
 	"github.com/conduitio/conduit-connector-google-sheets/config"
-	dconfig "github.com/conduitio/conduit-connector-google-sheets/destination/config"
-	sconfig "github.com/conduitio/conduit-connector-google-sheets/source/config"
-
+	"github.com/conduitio/conduit-connector-google-sheets/destination"
+	"github.com/conduitio/conduit-connector-google-sheets/source"
 	sdk "github.com/conduitio/conduit-connector-sdk"
 )
 
@@ -41,22 +40,27 @@ func Specification() sdk.Specification {
 			config.KeyTokensFile: {
 				Default:     "",
 				Required:    true,
-				Description: "path to token.json file containing a json with atleast refresh_token.",
+				Description: "path to token.json file containing a json with at least refresh_token.",
 			},
 			config.KeySheetURL: {
 				Default:     "",
 				Required:    true,
 				Description: "Google sheet url to fetch the records from",
 			},
-			dconfig.KeySheetName: {
+			destination.KeySheetName: {
 				Default:     "",
 				Required:    true,
-				Description: "Google sheet id to fetch the records",
+				Description: "Google sheet name to fetch the records",
 			},
-			dconfig.KeyInsertDataOption: {
-				Default:     dconfig.DefaultKeyInsertDataOption,
+			destination.KeyValueInputOption: {
+				Default:     "USER_ENTERED",
 				Required:    false,
-				Description: "Google sheet id to fetch the records",
+				Description: "Whether the data be inserted in USER_ENTERED mode or RAW mode",
+			},
+			destination.KeyMaxRetries: {
+				Default:     "3",
+				Required:    false,
+				Description: "Max API retries to be attempted, in case of 429 error, before returning error",
 			},
 		},
 		SourceParams: map[string]sdk.Parameter{
@@ -75,10 +79,20 @@ func Specification() sdk.Specification {
 				Required:    true,
 				Description: "Google sheet url to fetch the records from",
 			},
-			sconfig.KeyPollingPeriod: {
+			source.KeyPollingPeriod: {
 				Default:     "6s",
 				Required:    false,
 				Description: "Time interval for consecutive fetching data.",
+			},
+			source.KeyDateTimeRenderOption: {
+				Default:     "FORMATTED_STRING",
+				Required:    false,
+				Description: "Format of the Date/time related values. Valid values: SERIAL_NUMBER, FORMATTED_STRING",
+			},
+			source.KeyValueRenderOption: {
+				Default:     "FORMATTED_VALUE",
+				Required:    false,
+				Description: "Format of the dynamic/reference data. Valid values: FORMATTED_VALUE, UNFORMATTED_VALUE, FORMULA",
 			},
 		},
 	}

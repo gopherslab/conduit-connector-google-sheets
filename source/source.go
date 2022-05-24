@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"net/http"
 
-	sc "github.com/conduitio/conduit-connector-google-sheets/source/config"
+	"github.com/conduitio/conduit-connector-google-sheets/sheets"
 	"github.com/conduitio/conduit-connector-google-sheets/source/iterator"
 	"github.com/conduitio/conduit-connector-google-sheets/source/position"
 
@@ -34,7 +34,7 @@ type Source struct {
 
 	client     *http.Client
 	iterator   Iterator
-	configData sc.Config
+	configData Config
 }
 
 type Iterator interface {
@@ -49,7 +49,7 @@ func NewSource() sdk.Source {
 
 // Configure validates the passed config and prepares the source connector
 func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
-	sheetsConfig, err := sc.Parse(cfg)
+	sheetsConfig, err := Parse(cfg)
 	if err != nil {
 		return err
 	}
@@ -67,7 +67,13 @@ func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
 	}
 
 	s.iterator, err = iterator.NewSheetsIterator(ctx, s.client, pos,
-		s.configData,
+		sheets.BatchReaderArgs{
+			SpreadsheetID:        s.configData.GoogleSpreadsheetID,
+			SheetID:              s.configData.GoogleSheetID,
+			DateTimeRenderOption: s.configData.DateTimeRenderOption,
+			ValueRenderOption:    s.configData.ValueRenderOption,
+			PollingPeriod:        s.configData.PollingPeriod,
+		},
 	)
 
 	if err != nil {
@@ -105,6 +111,6 @@ func (s *Source) Ack(ctx context.Context, tp sdk.Position) error {
 	if err != nil {
 		sdk.Logger(ctx).Error().Err(err).Msg("invalid position received")
 	}
-	sdk.Logger(ctx).Info().Int64("row_offset", pos.RowOffset).Msg("message ack received")
+	sdk.Logger(ctx).Trace().Int64("row_offset", pos.RowOffset).Msg("message ack received")
 	return nil
 }

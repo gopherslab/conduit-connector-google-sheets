@@ -1,7 +1,17 @@
 # Conduit Connnector Google Sheets
 
-###  General
-The Conduit Connector for [Google Sheets](https://github.com/gopherslab/conduit-connector-google-sheets) fetches all the records from a particular sheet.
+### General
+
+The Conduit Connector for [Google Sheets](https://github.com/gopherslab/conduit-connector-google-sheets) provides both source as-well-as destination connector for the Google sheets
+
+### How to build it
+
+Run `make`.
+
+### Testing
+
+Run `make test` to run all the tests.
+
 To run the integration tests under acceptance_test.go, These env variables need to be set:
 `CONDUIT_GOOGLE_CREDENTIAL_JSON`: this env variable should contain the google service account's credentials JSON
 `CONDUIT_GOOGLE_TOKEN_JSON`: this env variable should contain the oauth2 token JSON containing at least `refresh_token`.
@@ -19,6 +29,8 @@ CONDUIT_GOOGLE_SHEET_NAME=Sheet1 \
 make test
 ```
 
+### Generating credentials
+
 ## Google Sheet Source
 
 The Google Sheet Connector connects to google sheets via Google Sheets API(v4) with the provided configuration using the `google.credentialsFile`, `google.tokensFile`, `google.sheetsURL` and along with a configurable pollingPeriod(Optional). 
@@ -35,20 +47,21 @@ If there are single/multiple empty rows in between the two records, it will fetc
 
 ### Position Handling
 
-The Google Sheets connector stores the the last row of the fetched sheet data as position. If in case, there are empty row(s), the Sheets connector will fetch till the last non-empty row and that last row will be stored as in position. 
+The Google Sheets connector stores the last row of the fetched sheet data as position. If in case, there are empty row(s), the Sheets connector will fetch till the last non-empty row and that last row will be stored as in position. 
 
 
 ### Configuration
 
 The config passed to `Configure` in source connector can contain the following fields.
 
-| name                         | description                                                                                                                    | required | example                                                                  |
-|------------------------------|--------------------------------------------------------------------------------------------------------------------------------|----------|--------------------------------------------------------------------------|
-| `google.credentialsFile`     | Path to credentials file which can be downloaded from Google Cloud Platform(in .json format) to authorise the user.            | yes      | "path://to/credential/file"                                              |
-| `google.tokensFile`          | Path to file in .json format which includes the `access_token`, `token_type`, `refresh_token` and `expiry`.                    | yes      | "path://to/token/file"                                                   |
-| `google.sheetsURL`           | URL of the google spreadsheet(copy the entire url from the address bar).                                                       | yes      | "https://docs.google.com/spreadsheets/d/dummy_spreadsheet_id/edit#gid=0" |
-| `pollingPeriod`              | time interval between two consecutive hits. Can be in format as s for seconds, m for minutes, h for hours (for eg: 2s; 2m; 2h) | no       | "6s"                                                                     |
-
+| name                                    | description                                                                                                                    | required | example                                                                  |
+|-----------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|----------|--------------------------------------------------------------------------|
+| `google.credentialsFile`                | Path to credentials file which can be downloaded from Google Cloud Platform(in .json format) to authorise the user.            | yes      | "path://to/credential/file"                                              |
+| `google.tokensFile`                     | Path to file in .json format which includes the `access_token`, `token_type`, `refresh_token` and `expiry`.                    | yes      | "path://to/token/file"                                                   |
+| `google.sheetsURL`                      | URL of the google spreadsheet(copy the entire url from the address bar).                                                       | yes      | "https://docs.google.com/spreadsheets/d/dummy_spreadsheet_id/edit#gid=0" |
+| `google.DateTimeRenderOption`           | Format of the Date/time related values. Valid values: SERIAL_NUMBER, FORMATTED_STRING                                          | no       | "FORMATTED_STRING"                                                       |
+| `google.ValueRenderOption`              | Format of the dynamic/reference data. Valid values: FORMATTED_VALUE, UNFORMATTED_VALUE, FORMULA                                | no       | "FORMATTED_VALUE"                                                        |
+| `pollingPeriod`                         | time interval between two consecutive hits. Can be in format as s for seconds, m for minutes, h for hours (for eg: 2s; 2m; 2h) | no       | "6s"                                                                     |
 
 ### Known Limitations
 
@@ -76,8 +89,9 @@ The config passed to `Configure` in destination connector can contain the follow
 | `google.credentialsFile`  | Path to credentials file which can be downloaded from Google Cloud Platform(in .json format) to authorise the user.                                                                    | yes       | "path://to/credential/file"                                              |
 | `google.tokensFile`       | Path to file in .json format which includes the `access_token`, `token_type`, `refresh_token` and `expiry`.                                                                            | yes       | "path://to/token/file"                                                   |
 | `google.sheetsURL`        | URL of the google spreadsheet(copy the entire url from the address bar).                                                                                                               | yes       | "https://docs.google.com/spreadsheets/d/dummy_spreadsheet_id/edit#gid=0" |
-| `sheetName`               | Sheet name on which the data is to be appended.                                                                                                                                        | yes       | "sheetName"                                                              |
-| `insertDataOption`        | How the data be inserted in google sheets(i.e either `OVERWRITE` or `INSERT_ROWS`). The default value for `insertDataOption` is `INSERT_ROWS`                                          | no        | "insertDataOption"                                                       |
+| `google.sheetName`        | Sheet name on which the data is to be appended.                                                                                                                                        | yes       | "sheetName"                                                              |
+| `google.valueInputOption` | Whether the data should be parsed, similar to adding data from browser, or as a raw string. Values: "RAW", "USER_ENTERED"(default)                                                     | no        | "USER_ENTERED"                                                           |
+| `maxRetries`              | Number of API retries to be made, in case of rate-limit error, before returning an error. Default: 3                                                                                   | no       | "3"                                                                      |
 | `bufferSize`              | Minumun number of records in buffer to hit the google sheet api. The `buffer_size` should be less than the `maxBufferSize` whose default value is `100`, otherwise an error is thrown. | no       | "bufferSize"                                                             |
 
 
