@@ -32,14 +32,16 @@ import (
 const insertDataOption = "INSERT_ROWS"
 
 type Writer struct {
-	sheets           *sheets.Service
-	sheetName        string
-	spreadsheetID    string
+	sheets        *sheets.Service
+	sheetName     string
+	spreadsheetID string
+	// haris: we should explain what this is
 	valueInputOption string
 	maxRetries       uint64
 	retryCount       uint64
 }
 
+// haris: what if valueInputOption is an invalid option?
 func NewWriter(ctx context.Context, client *http.Client, spreadsheetID, sheetName, valueInputOption string, retries uint64) (*Writer, error) {
 	sheetService, err := sheets.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
@@ -59,10 +61,12 @@ func (w *Writer) Write(ctx context.Context, records []sdk.Record) error {
 	var rows [][]interface{}
 
 	// Looping on every record and unmarhsalling to google-sheets format.
+	// haris: what is the google sheets format?
 	for _, rowRecord := range records {
 		rowArr := make([]interface{}, 0)
 		err := json.Unmarshal(rowRecord.Payload.Bytes(), &rowArr)
 		if err != nil {
+			// haris: we should try to be more specific what record was problematic
 			return fmt.Errorf("unable to marshal the record %w", err)
 		}
 		rows = append(rows, rowArr)
@@ -88,6 +92,7 @@ func (w *Writer) Write(ctx context.Context, records []sdk.Record) error {
 	if err != nil {
 		// retry mechanism, in case of rate limit exceeded error (429)
 		if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == http.StatusTooManyRequests {
+			// haris: do we ever reset the retry count?
 			if w.retryCount >= w.maxRetries {
 				return fmt.Errorf("rate limit exceeded, retries: %d, error: %w", w.retryCount, err)
 			}

@@ -34,6 +34,7 @@ import (
 const majorDimension = "ROWS"
 
 type BatchReader struct {
+	// haris: we should have docs for the fields
 	nextRun              time.Time
 	spreadsheetID        string
 	sheetID              int64
@@ -83,6 +84,7 @@ func (g *BatchReader) GetSheetRecords(ctx context.Context, offset int64) ([]sdk.
 			g.retryCount++
 			duration := time.Duration(g.retryCount * int64(g.pollingPeriod)) // exponential back off
 			g.nextRun = time.Now().Add(duration)
+			// haris: maybe log err too?
 			sdk.Logger(ctx).Error().
 				Int64("retry_count", g.retryCount).
 				Float64("wait_duration", duration.Seconds()).
@@ -117,6 +119,8 @@ func (g *BatchReader) valueRangesToRecords(valueRanges []*sheets.MatchedValueRan
 	for i := range valueRanges {
 		valueRange := valueRanges[i].ValueRange
 		values := valueRange.Values
+		// haris: what's `i` and what's `index` here?
+		// Maybe it's the same answer as for what's difference between valueRanges and valueRange.values?
 		for index, val := range values {
 			if len(val) == 0 {
 				continue

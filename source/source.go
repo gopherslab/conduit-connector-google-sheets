@@ -38,6 +38,7 @@ type Source struct {
 }
 
 type Iterator interface {
+	// haris: ctx never used in impl.
 	HasNext(ctx context.Context) bool
 	Next(ctx context.Context) (sdk.Record, error)
 	Stop()
@@ -54,7 +55,11 @@ func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
 		return err
 	}
 	s.configData = sheetsConfig
-
+	// haris: it might be good not to initialize the client in Parse() at all
+	// what we usually do when parsing is just to convert values
+	// and make sure required params are there.
+	// the client itself doesn't feel like a configuration param, and hence probably shouldn't be part of Config.
+	// IMHO, we can do all of that in Open()
 	s.client = s.configData.Client
 	return nil
 }
@@ -100,6 +105,7 @@ func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
 func (s *Source) Teardown(_ context.Context) error {
 	if s.iterator != nil {
 		s.iterator.Stop()
+		// haris: we should explain why do we need to set it to nil
 		s.iterator = nil
 	}
 	return nil
@@ -107,6 +113,7 @@ func (s *Source) Teardown(_ context.Context) error {
 
 // Ack is called by the conduit server after the record has been successfully processed by all destination connectors
 func (s *Source) Ack(ctx context.Context, tp sdk.Position) error {
+	// haris: so it seems like we are only logging this, we aren't actually ack-ing anything?
 	pos, err := position.ParseRecordPosition(tp)
 	if err != nil {
 		sdk.Logger(ctx).Error().Err(err).Msg("invalid position received")

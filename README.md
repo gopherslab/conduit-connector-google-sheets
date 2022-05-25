@@ -12,6 +12,8 @@ Run `make`.
 
 Run `make test` to run all the tests.
 
+haris: why don't we create the test data (i.e.) ourselves?
+
 To run the integration tests under acceptance_test.go, These env variables need to be set:
 `CONDUIT_GOOGLE_CREDENTIAL_JSON`: this env variable should contain the google service account's credentials JSON
 `CONDUIT_GOOGLE_TOKEN_JSON`: this env variable should contain the oauth2 token JSON containing at least `refresh_token`.
@@ -30,6 +32,8 @@ make test
 ```
 
 ## Generating credentials
+haris: it looks like this requires a project to be created. If so, that needs to be made clear, and we also need
+to have notes about anything special about that.
 
 In order to generate credentials.json, please follow [this link](https://developers.google.com/workspace/guides/create-credentials). After the credentials.json is generated, download the json file and place it inside your root project. To generate token file(i.e token_UnixTimeStamp.json), run `./google-token-gen` from the root project. A browser window will open, to verify the gmail account followed by the consent page. 
 
@@ -60,6 +64,7 @@ Once successful, you will get the same message as above. Similarly, copy both th
 
 
 ## Google Sheet Source
+haris: can you please remind me what is the reason why we don't fetch records from all sheets in a document?
 
 The Google Sheet Connector connects to google sheets via Google Sheets API(v4) with the provided configuration using the `google.credentialsFile`, `google.tokensFile`, `google.sheetsURL` and along with a configurable pollingPeriod(Optional). 
 
@@ -81,6 +86,8 @@ The Google Sheets connector stores the last row of the fetched sheet data as pos
 ### Configuration
 
 The config passed to `Configure` in source connector can contain the following fields.
+haris: fields should follow the same convention (currently some have the google prefix, some not). Also, ideally they all
+are camelCase. IMHO, the `google.` prefix is not needed, since this is the Google Sheets connector anyway.
 
 | name                                    | description                                                                                                                    | required | example                                                                  |
 |-----------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|----------|--------------------------------------------------------------------------|
@@ -105,6 +112,7 @@ The Google Sheet Destination connector connects to the provided Google SheetID w
 
 
 ### Google Sheet Writer
+haris: we should start by explaining what this writer actually is.
 
 The destination writer maintains a configurable buffer(default length is 100), or each time `WriteAsync` is called, a new record is added to the buffer. The `bufferSize` is configurable and the max value, the buffer can be is 100, minumum it could be 1. Once the buffer is full(as per the configured value), all the records from it will be written/appended to the last row of google sheets and an ack function will be called for each record after being written.
 

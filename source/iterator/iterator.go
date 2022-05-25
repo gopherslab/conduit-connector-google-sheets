@@ -35,8 +35,9 @@ type SheetsIterator struct {
 	rowOffset int64
 	tomb      *tomb.Tomb
 	ticker    *time.Ticker
-	caches    chan []sdk.Record
-	buffer    chan sdk.Record
+	// haris: what's the difference between caches and buffer?
+	caches chan []sdk.Record
+	buffer chan sdk.Record
 }
 
 // NewSheetsIterator creates a new instance of sheets iterator and starts polling google sheets api for new changes
@@ -46,6 +47,7 @@ func NewSheetsIterator(ctx context.Context,
 	tp position.SheetPosition,
 	args sheets.BatchReaderArgs,
 ) (*SheetsIterator, error) {
+	// haris: why do we overwrite the input context?
 	tmbWithCtx, ctx := tomb.WithContext(ctx)
 	sheets, err := sheets.NewBatchReader(ctx, client, args)
 	if err != nil {
@@ -56,9 +58,10 @@ func NewSheetsIterator(ctx context.Context,
 		sheets:    sheets,
 		rowOffset: tp.RowOffset,
 		tomb:      tmbWithCtx,
-		caches:    make(chan []sdk.Record, 1),
-		buffer:    make(chan sdk.Record, 1),
-		ticker:    time.NewTicker(args.PollingPeriod),
+		// haris: we should explain why are these channels buffered and their size is 1.
+		caches: make(chan []sdk.Record, 1),
+		buffer: make(chan sdk.Record, 1),
+		ticker: time.NewTicker(args.PollingPeriod),
 	}
 
 	cdc.tomb.Go(cdc.startIterator(ctx))
@@ -78,6 +81,8 @@ func (c *SheetsIterator) startIterator(ctx context.Context) func() error {
 			case <-c.ticker.C:
 				records, err := c.sheets.GetSheetRecords(ctx, c.rowOffset)
 				if err != nil {
+					// haris: we should be wrapping the errors, to provide more context about
+					// how it came to the error (e.g. fmt.Errorf("failed fetching records at offset %v: %w"))
 					return err
 				}
 				if len(records) == 0 {
@@ -85,6 +90,7 @@ func (c *SheetsIterator) startIterator(ctx context.Context) func() error {
 				}
 				select {
 				case c.caches <- records:
+					// haris: are the records guaranteed to be sorted?
 					pos, err := position.ParseRecordPosition(records[len(records)-1].Position)
 					if err != nil {
 						return err
@@ -138,6 +144,7 @@ func (c *SheetsIterator) Next(ctx context.Context) (sdk.Record, error) {
 
 // Stop stops the go routines
 func (c *SheetsIterator) Stop() {
+	// haris: we should probably log this.
 	c.ticker.Stop()
 	c.tomb.Kill(errors.New("iterator stopped"))
 }
