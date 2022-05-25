@@ -118,6 +118,9 @@ func (g *BatchReader) valueRangesToRecords(valueRanges []*sheets.MatchedValueRan
 		valueRange := valueRanges[i].ValueRange
 		values := valueRange.Values
 		for index, val := range values {
+			if len(val) == 0 {
+				continue
+			}
 			rawData, err := json.Marshal(val)
 			if err != nil {
 				return records, fmt.Errorf("error marshaling the map: %w", err)
