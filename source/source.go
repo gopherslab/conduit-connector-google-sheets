@@ -55,7 +55,11 @@ func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
 		return err
 	}
 	s.configData = sheetsConfig
-
+	// haris: it might be good not to initialize the client in Parse() at all
+	// what we usually do when parsing is just to convert values
+	// and make sure required params are there.
+	// the client itself doesn't feel like a configuration param, and hence probably shouldn't be part of Config.
+	// IMHO, we can do all of that in Open()
 	s.client = s.configData.Client
 	return nil
 }

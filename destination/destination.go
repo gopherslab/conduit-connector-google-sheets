@@ -29,6 +29,7 @@ import (
 type Destination struct {
 	sdk.UnimplementedDestination
 
+	// haris: let's have some docs for these fields
 	buffer   []sdk.Record
 	AckCache []sdk.AckFunc
 	err      error
@@ -61,6 +62,7 @@ func (d *Destination) Configure(ctx context.Context,
 
 // Open makes sure everything is prepared to receive records.
 func (d *Destination) Open(ctx context.Context) error {
+	// haris: out ofcuriosity, why not initialize it in NewDestination?
 	d.mux = &sync.Mutex{}
 
 	// initializing the buffer
@@ -69,6 +71,7 @@ func (d *Destination) Open(ctx context.Context) error {
 
 	writer, err := sheets.NewWriter(
 		ctx,
+		// haris: when setting d.config in Open() above, we don't set Client. Should we?
 		d.config.Client,
 		d.config.GoogleSpreadsheetID,
 		d.config.SheetName,
@@ -91,6 +94,8 @@ func (d *Destination) WriteAsync(ctx context.Context,
 		return d.err
 	}
 
+	// haris: thinking out loud, it might make sense to just put in a new line
+	// when there is no payload.
 	if len(r.Payload.Bytes()) == 0 {
 		return nil
 	}

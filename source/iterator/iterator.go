@@ -47,7 +47,7 @@ func NewSheetsIterator(ctx context.Context,
 	tp position.SheetPosition,
 	args sheets.BatchReaderArgs,
 ) (*SheetsIterator, error) {
-	// haris: why do we overrite the input context?
+	// haris: why do we overwrite the input context?
 	tmbWithCtx, ctx := tomb.WithContext(ctx)
 	sheets, err := sheets.NewBatchReader(ctx, client, args)
 	if err != nil {
