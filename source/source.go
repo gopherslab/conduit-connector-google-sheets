@@ -38,6 +38,7 @@ type Source struct {
 }
 
 type Iterator interface {
+	// haris: ctx never used in impl.
 	HasNext(ctx context.Context) bool
 	Next(ctx context.Context) (sdk.Record, error)
 	Stop()
@@ -100,6 +101,7 @@ func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
 func (s *Source) Teardown(_ context.Context) error {
 	if s.iterator != nil {
 		s.iterator.Stop()
+		// haris: we should explain why do we need to set it to nil
 		s.iterator = nil
 	}
 	return nil
@@ -107,6 +109,7 @@ func (s *Source) Teardown(_ context.Context) error {
 
 // Ack is called by the conduit server after the record has been successfully processed by all destination connectors
 func (s *Source) Ack(ctx context.Context, tp sdk.Position) error {
+	// haris: so it seems like we are only logging this, we aren't actually ack-ing anything?
 	pos, err := position.ParseRecordPosition(tp)
 	if err != nil {
 		sdk.Logger(ctx).Error().Err(err).Msg("invalid position received")

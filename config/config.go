@@ -51,6 +51,9 @@ var (
 
 // Config represent configuration needed for google-sheets
 type Config struct {
+	// haris: at least to me, it feels like the client should be part of the iterator
+	// and should be "assembled" there, not in the config. Config is a passive entity,
+	// it only contains the config params and functions to manipulate them.
 	Client              *http.Client
 	GoogleSpreadsheetID string
 	GoogleSheetID       int64
@@ -89,6 +92,7 @@ func Parse(config map[string]string) (Config, error) {
 	cfg := Config{
 		// for some reason using cancellable context causes refresh functionality to stop working
 		// using context.Background to avoid that issue
+		// haris: what's the above comment about? Maybe outdated, since I don't see any context usage here.
 		Client:              authClient,
 		GoogleSheetID:       sheetID,
 		GoogleSpreadsheetID: spreadSheetID,
