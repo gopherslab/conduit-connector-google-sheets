@@ -31,6 +31,18 @@ make test
 
 ## Generating credentials
 
+In order to generate credentials.json, please follow [this link](https://developers.google.com/workspace/guides/create-credentials). After the credentials.json is generated, download the json file and place it inside your root project. To generate token file(i.e token_UnixTimeStamp.json), run `./google-token-gen` from the root project. A browser window will open, to verify the gmail account followed by the conset page. 
+
+Once successful, you will get the following message: 
+```
+Token file generated successfully.
+credentials.json file path: file/path/to/credentials.json
+token.json file path: file/path/to/token_1653466634.json
+
+```
+
+Copy both the .json file paths and provide them in `google.credentialsFile`, `google.tokensFile`. 
+
 
 ## Google Sheet Source
 
@@ -67,7 +79,9 @@ The config passed to `Configure` in source connector can contain the following f
 ### Known Limitations
 
 * At a time, only one `gid` as s subset string in `google.sheetsURL` can be used to fetch the records from the google sheets.
+* Empty Rows will be skipped while fetching.
 * Any modification/update/delete made to a previous row(s) in google sheets, after the records are fetched will not be visible in the next api hit.
+
 
 
 ## Google Sheet Destination
@@ -97,11 +111,19 @@ The config passed to `Configure` in destination connector can contain the follow
 
 
 
+### Known Limitations
+
+* At current, while appending data to google sheets, we are only supporting ROWS parameter.
+* The `insertDataOption` field value is kept to `INSERT_ROWS`, as `OVERWRITE` does not provide the expected action. For more on `insertDataOption`, kindly refer to [this](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/append#InsertDataOption).
+
+
+
 ## Note of caution
 
 As the Google Sheets API is a shared service, quotas and limitations are applied to make sure it's used fairly by all users. If a quota is exceeded, you'll generally receive a 429: Too many requests HTTP status code response. Though the case is handled by implementing our own retry strategy which is to multiplying the counter value to the configurable polling period which plays a significant role in avoiding such HTTP statuses.
 
 Ref: https://developers.google.com/sheets/api/limits
+
 
 
 ## References 

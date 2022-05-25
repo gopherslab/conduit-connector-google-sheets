@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/conduitio/conduit-connector-sdk v0.2.1-0.20220509181254-2cded239f31f
 	github.com/matryer/is v1.4.0
+	github.com/rs/zerolog v1.26.1
 	github.com/stretchr/testify v1.7.1
 	go.uber.org/goleak v1.1.12
 	golang.org/x/oauth2 v0.0.0-20220309155454-6242fa91716a
@@ -29,7 +30,6 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/rs/zerolog v1.26.1 // indirect
 	go.buf.build/library/go-grpc/conduitio/conduit-connector-protocol v1.4.1 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/net v0.0.0-20220513224357-95641704303c // indirect
