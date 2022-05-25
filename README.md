@@ -31,7 +31,7 @@ make test
 
 ## Generating credentials
 
-In order to generate credentials.json, please follow [this link](https://developers.google.com/workspace/guides/create-credentials). After the credentials.json is generated, download the json file and place it inside your root project. To generate token file(i.e token_UnixTimeStamp.json), run `./google-token-gen` from the root project. A browser window will open, to verify the gmail account followed by the conset page. 
+In order to generate credentials.json, please follow [this link](https://developers.google.com/workspace/guides/create-credentials). After the credentials.json is generated, download the json file and place it inside your root project. To generate token file(i.e token_UnixTimeStamp.json), run `./google-token-gen` from the root project. A browser window will open, to verify the gmail account followed by the consent page. 
 
 Once successful, you will get the following message: 
 ```
@@ -42,6 +42,21 @@ token.json file path: file/path/to/token_1653466634.json
 ```
 
 Copy both the .json file paths and provide them in `google.credentialsFile`, `google.tokensFile`. 
+
+
+Alternatively, if you already have the auth code present, then you can  run:
+```
+./google-token-gen -code="Your Auth Code"
+```
+
+For instance, to extract auth code from a url:
+" http://{_address_}/?state=state-token&code=4/0AX4XfWgU1qObv5Lx1SegTjjtXOALs5Z5I3BeUX7m66D8O-eOnazljIvWiSsfYA52kZPlUQ&scope=https://www.googleapis.com/auth/spreadsheets.readonly%20https://www.googleapis.com/auth/spreadsheets "
+
+Your auth code url will be :
+ 4/0AX4XfWgU1qObv5Lx1SegTjjtXOALs5Z5I3BeUX7m66D8O-eOnazljIvWiSsfYA52kZPlUQ
+
+Once successful, you will get the same message as above. Similarly, copy both the .json file paths and provide them in `google.credentialsFile`, `google.tokensFile`.
+
 
 
 ## Google Sheet Source
@@ -114,7 +129,7 @@ The config passed to `Configure` in destination connector can contain the follow
 ### Known Limitations
 
 * At current, while appending data to google sheets, we are only supporting ROWS parameter.
-* The `insertDataOption` field value is kept to `INSERT_ROWS`, as `OVERWRITE` does not provide the expected action. For more on `insertDataOption`, kindly refer to [this](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/append#InsertDataOption).
+* The `insertDataOption` field value is kept to `INSERT_ROWS`, as `OVERWRITE` does not provide the expected action. For more information on `insertDataOption`, kindly refer to [this](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/append#InsertDataOption).
 
 
 
