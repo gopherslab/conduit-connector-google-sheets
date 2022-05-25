@@ -50,9 +50,9 @@ Alternatively, if you already have the auth code present, then you can  run:
 ```
 
 For instance, to extract auth code from a url:
-" http://{_address_}/?state=state-token&code=4/0AX4XfWgU1qObv5Lx1SegTjjtXOALs5Z5I3BeUX7m66D8O-eOnazljIvWiSsfYA52kZPlUQ&scope=https://www.googleapis.com/auth/spreadsheets.readonly%20https://www.googleapis.com/auth/spreadsheets "
+" http://{_address_}/?state=state-token&code=4/0AX4XfWgU1qObv5Lx1SeagTjjtXOALsX45I3BeUX7m66D89-eOnzljIvWiSsfYA52kZPlUQ&scope=https://www.googleapis.com/auth/spreadsheets.readonly%20https://www.googleapis.com/auth/spreadsheets "
 
-Your auth code url will be :
+Your auth code will be :
  4/0AX4XfWgU1qObv5Lx1SegTjjtXOALs5Z5I3BeUX7m66D8O-eOnazljIvWiSsfYA52kZPlUQ
 
 Once successful, you will get the same message as above. Similarly, copy both the .json file paths and provide them in `google.credentialsFile`, `google.tokensFile`.
