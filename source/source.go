@@ -100,6 +100,8 @@ func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
 func (s *Source) Teardown(_ context.Context) error {
 	if s.iterator != nil {
 		s.iterator.Stop()
+		// Removing the iterator object so that no new data is being thrown
+		// by the iterator to the conduit server when the pipeline is paused. 
 		s.iterator = nil
 	}
 	return nil

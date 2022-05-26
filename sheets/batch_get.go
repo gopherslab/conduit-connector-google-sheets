@@ -34,13 +34,20 @@ import (
 const majorDimension = "ROWS"
 
 type BatchReader struct {
+	// If an error encountered, after how much time duration, the api should hit next.
 	nextRun              time.Time
 	spreadsheetID        string
 	sheetID              int64
+	// retry mechanism after getting http error status. maximum is 3.
 	retryCount           int64
 	sheets               *sheets.Service
 	pollingPeriod        time.Duration
+	// Determines how dates, times, and durations in the response should be rendered. 
+	// This is ignored if responseValueRenderOption is FORMATTED_VALUE. 
+	// The default dateTime render option is SERIAL_NUMBER.
 	dateTimeRenderOption string
+	//Determines how values in the response should be rendered. 
+	//The default render option is FORMATTED_VALUE.
 	valueRenderOption    string
 }
 
@@ -115,8 +122,8 @@ func (g *BatchReader) getDataFilter(offset int64) *sheets.BatchGetValuesByDataFi
 func (g *BatchReader) valueRangesToRecords(valueRanges []*sheets.MatchedValueRange, offset int64) ([]sdk.Record, error) {
 	records := make([]sdk.Record, 0)
 	for i := range valueRanges {
-		valueRange := valueRanges[i].ValueRange
-		values := valueRange.Values
+		values := valueRanges[i].ValueRange.Values
+		// values := valueRange.Values
 		for index, val := range values {
 			if len(val) == 0 {
 				continue

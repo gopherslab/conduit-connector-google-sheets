@@ -59,11 +59,11 @@ func (w *Writer) Write(ctx context.Context, records []sdk.Record) error {
 	var rows [][]interface{}
 
 	// Looping on every record and unmarhsalling to google-sheets format.
-	for _, rowRecord := range records {
+	for index, rowRecord := range records {
 		rowArr := make([]interface{}, 0)
 		err := json.Unmarshal(rowRecord.Payload.Bytes(), &rowArr)
 		if err != nil {
-			return fmt.Errorf("unable to marshal the record %w", err)
+			return fmt.Errorf("at index %d unable to marshal the record %w", index, err)
 		}
 		rows = append(rows, rowArr)
 	}

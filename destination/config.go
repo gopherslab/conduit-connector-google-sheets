@@ -25,14 +25,14 @@ import (
 
 const (
 	// KeySheetName is the name of the sheet needed to fetch data.
-	KeySheetName = "google.sheetName"
+	KeySheetName = "sheetName"
 
 	// KeyBufferSize is the config name for buffer size.
 	KeyBufferSize = "bufferSize"
 
 	// KeyValueInputOption is the config name for how the input data
 	// should be inserted.
-	KeyValueInputOption = "google.valueInputOption"
+	KeyValueInputOption = "valueInputOption"
 
 	// KeyMaxRetries is the config key for max retry
 	KeyMaxRetries = "maxRetries"
@@ -89,7 +89,7 @@ func Parse(cfg map[string]string) (Config, error) {
 	}
 
 	bufferSize, err := strconv.ParseUint(bufferSizeString, 10, 64)
-	if err != nil {
+	if err != nil || bufferSize < 1 {
 		return Config{}, fmt.Errorf(
 			"%q config value should be a positive integer",
 			KeyBufferSize,

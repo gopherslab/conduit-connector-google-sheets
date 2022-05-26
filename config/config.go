@@ -31,13 +31,13 @@ import (
 
 const (
 	// KeyCredentialsFile is the config name for Google access key
-	KeyCredentialsFile = "google.credentialsFile"
+	KeyCredentialsFile = "credentialsFile"
 
 	// KeyTokensFile is the config name for google generated token file
-	KeyTokensFile = "google.tokensFile"
+	KeyTokensFile = "tokensFile"
 
 	// KeySheetURL is the config name for google-sheets url
-	KeySheetURL = "google.sheetsURL"
+	KeySheetURL = "sheetsURL"
 )
 
 var (
@@ -87,8 +87,6 @@ func Parse(config map[string]string) (Config, error) {
 	}
 
 	cfg := Config{
-		// for some reason using cancellable context causes refresh functionality to stop working
-		// using context.Background to avoid that issue
 		Client:              authClient,
 		GoogleSheetID:       sheetID,
 		GoogleSpreadsheetID: spreadSheetID,

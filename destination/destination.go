@@ -29,8 +29,11 @@ import (
 type Destination struct {
 	sdk.UnimplementedDestination
 
-	buffer   []sdk.Record
-	AckCache []sdk.AckFunc
+	// buffer field will append records coming from conduit
+	buffer []sdk.Record
+
+	// ackCache will hold all the ack of all successfully processed records
+	ackCache []sdk.AckFunc
 	err      error
 	mux      *sync.Mutex
 	config   Config
@@ -65,7 +68,7 @@ func (d *Destination) Open(ctx context.Context) error {
 
 	// initializing the buffer
 	d.buffer = make([]sdk.Record, 0, d.config.BufferSize)
-	d.AckCache = make([]sdk.AckFunc, 0, d.config.BufferSize)
+	d.ackCache = make([]sdk.AckFunc, 0, d.config.BufferSize)
 
 	writer, err := sheets.NewWriter(
 		ctx,
@@ -99,7 +102,7 @@ func (d *Destination) WriteAsync(ctx context.Context,
 	defer d.mux.Unlock()
 
 	d.buffer = append(d.buffer, r)
-	d.AckCache = append(d.AckCache, ack)
+	d.ackCache = append(d.ackCache, ack)
 
 	if len(d.buffer) >= int(d.config.BufferSize) {
 		err := d.Flush(ctx)
@@ -123,13 +126,13 @@ func (d *Destination) Flush(ctx context.Context) error {
 	}
 
 	// call all the written records ackFunctions
-	for _, ack := range d.AckCache {
+	for _, ack := range d.ackCache {
 		err := ack(d.err)
 		if err != nil {
 			return fmt.Errorf("failed acknowledgement: %w", err)
 		}
 	}
-	d.AckCache = d.AckCache[:0]
+	d.ackCache = d.ackCache[:0]
 
 	return nil
 }

@@ -78,7 +78,7 @@ func (c *SheetsIterator) startIterator(ctx context.Context) func() error {
 			case <-c.ticker.C:
 				records, err := c.sheets.GetSheetRecords(ctx, c.rowOffset)
 				if err != nil {
-					return err
+					return fmt.Errorf("unable to fetch records: %w", err)
 				}
 				if len(records) == 0 {
 					continue
@@ -87,7 +87,7 @@ func (c *SheetsIterator) startIterator(ctx context.Context) func() error {
 				case c.caches <- records:
 					pos, err := position.ParseRecordPosition(records[len(records)-1].Position)
 					if err != nil {
-						return err
+						return fmt.Errorf("failed to parse record position: %w", err)
 					}
 					c.rowOffset = pos.RowOffset
 				case <-c.tomb.Dying():
