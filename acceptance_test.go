@@ -116,10 +116,7 @@ func TestAcceptance(t *testing.T) {
 	spreadsheetID = conf.GoogleSpreadsheetID
 	sheetID = conf.GoogleSheetID
 
-	client, err := config.NewOauthClient(credFilePath, tokenFilePath)
-	if err != nil {
-		t.Fatal(err)
-	}
+	client := conf.OAuthConfig.Client(ctx, conf.OAuthToken)
 	sheetService, err := sheets.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		t.Fatal(err)

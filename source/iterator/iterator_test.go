@@ -18,7 +18,6 @@ package iterator
 import (
 	"context"
 	"errors"
-	"net/http"
 	"testing"
 	"time"
 
@@ -57,7 +56,7 @@ func TestNewSheetsIterator(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			res, err := NewSheetsIterator(context.Background(), &http.Client{}, tt.tp, tt.args)
+			res, err := NewSheetsIterator(context.Background(), tt.tp, tt.args)
 			if tt.err != nil {
 				assert.EqualError(t, err, tt.err.Error())
 			} else {
@@ -124,7 +123,7 @@ func TestHasNext(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cdc := &SheetsIterator{buffer: make(chan sdk.Record, 1), tomb: &tomb.Tomb{}}
 			tt.fn(cdc)
-			res := cdc.HasNext(context.Background())
+			res := cdc.HasNext()
 			assert.Equal(t, res, tt.response)
 		})
 	}

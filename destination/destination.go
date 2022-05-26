@@ -29,10 +29,7 @@ import (
 type Destination struct {
 	sdk.UnimplementedDestination
 
-	// buffer field will append records coming from conduit
-	buffer []sdk.Record
-
-	// ackCache will hold all the ack of all successfully processed records
+	buffer   []sdk.Record
 	ackCache []sdk.AckFunc
 	err      error
 	mux      *sync.Mutex
@@ -58,21 +55,20 @@ func (d *Destination) Configure(ctx context.Context,
 		BufferSize:       sheetsConfig.BufferSize,
 		ValueInputOption: sheetsConfig.ValueInputOption,
 	}
-
+	d.mux = &sync.Mutex{}
 	return nil
 }
 
 // Open makes sure everything is prepared to receive records.
 func (d *Destination) Open(ctx context.Context) error {
-	d.mux = &sync.Mutex{}
-
 	// initializing the buffer
 	d.buffer = make([]sdk.Record, 0, d.config.BufferSize)
 	d.ackCache = make([]sdk.AckFunc, 0, d.config.BufferSize)
 
 	writer, err := sheets.NewWriter(
 		ctx,
-		d.config.Client,
+		d.config.OAuthConfig,
+		d.config.OAuthToken,
 		d.config.GoogleSpreadsheetID,
 		d.config.SheetName,
 		d.config.ValueInputOption,

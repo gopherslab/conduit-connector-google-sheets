@@ -26,12 +26,15 @@ import (
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/oauth2"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
 )
 
 func TestNewBatchReader(t *testing.T) {
-	got, err := NewBatchReader(context.Background(), &http.Client{}, BatchReaderArgs{
+	got, err := NewBatchReader(context.Background(), BatchReaderArgs{
+		OAuthToken:           &oauth2.Token{},
+		OAuthConfig:          &oauth2.Config{},
 		SpreadsheetID:        "dummy_spreadsheet",
 		SheetID:              1234,
 		DateTimeRenderOption: "SOME_VALUE",

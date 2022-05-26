@@ -17,11 +17,9 @@ limitations under the License.
 package config
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"regexp"
 	"strconv"
 
@@ -51,7 +49,8 @@ var (
 
 // Config represent configuration needed for google-sheets
 type Config struct {
-	Client              *http.Client
+	OAuthConfig         *oauth2.Config
+	OAuthToken          *oauth2.Token
 	GoogleSpreadsheetID string
 	GoogleSheetID       int64
 }
@@ -74,10 +73,27 @@ func Parse(config map[string]string) (Config, error) {
 		return Config{}, requiredConfigErr(KeySheetURL)
 	}
 
-	// parse files and URL
-	authClient, err := NewOauthClient(credFile, tokenFile)
+	// parse credentials.json
+	credBytes, err := ioutil.ReadFile(credFile)
 	if err != nil {
-		return Config{}, err
+		return Config{}, fmt.Errorf("unable to read client secret file: %w", err)
+	}
+
+	// validate if the credentials are google credentials
+	oauthConfig, err := google.ConfigFromJSON(credBytes, scopes...)
+	if err != nil {
+		return Config{}, fmt.Errorf("unable to parse client secret file to config: %w", err)
+	}
+
+	// parse tokens file
+	var token *oauth2.Token
+	tokenBytes, err := ioutil.ReadFile(tokenFile)
+	if err != nil {
+		return Config{}, fmt.Errorf("unable to read tokens file: %w", err)
+	}
+
+	if err := json.Unmarshal(tokenBytes, &token); err != nil {
+		return Config{}, fmt.Errorf("unable to unmarshal tokens file: %w", err)
 	}
 
 	// parse sheets url
@@ -87,7 +103,8 @@ func Parse(config map[string]string) (Config, error) {
 	}
 
 	cfg := Config{
-		Client:              authClient,
+		OAuthConfig:         oauthConfig,
+		OAuthToken:          token,
 		GoogleSheetID:       sheetID,
 		GoogleSpreadsheetID: spreadSheetID,
 	}
@@ -111,28 +128,4 @@ func parseSheetURL(url string) (string, int64, error) {
 		return "", 0, fmt.Errorf("error converting sheet id to int: %w", err)
 	}
 	return stringMatches[1], sheetID, nil // spreadsheetID, sheetID, error
-}
-
-func NewOauthClient(credFile, tokenFile string) (*http.Client, error) {
-	// parse credentials.json
-	credBytes, err := ioutil.ReadFile(credFile)
-	if err != nil {
-		return nil, fmt.Errorf("unable to read client secret file: %w", err)
-	}
-
-	oauthConfig, err := google.ConfigFromJSON(credBytes, scopes...)
-	if err != nil {
-		return nil, fmt.Errorf("unable to parse client secret file to config: %w", err)
-	}
-
-	// parse tokens file
-	var token *oauth2.Token
-	tokenBytes, err := ioutil.ReadFile(tokenFile)
-	if err != nil {
-		return nil, fmt.Errorf("unable to read tokens file: %w", err)
-	}
-	if err := json.Unmarshal(tokenBytes, &token); err != nil {
-		return nil, fmt.Errorf("unable to unmarshal tokens file: %w", err)
-	}
-	return oauthConfig.Client(context.Background(), token), nil
 }

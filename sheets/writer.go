@@ -24,6 +24,7 @@ import (
 	"time"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
+	"golang.org/x/oauth2"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
@@ -40,8 +41,14 @@ type Writer struct {
 	retryCount       uint64
 }
 
-func NewWriter(ctx context.Context, client *http.Client, spreadsheetID, sheetName, valueInputOption string, retries uint64) (*Writer, error) {
-	sheetService, err := sheets.NewService(ctx, option.WithHTTPClient(client))
+func NewWriter(
+	ctx context.Context,
+	oauthCfg *oauth2.Config,
+	token *oauth2.Token,
+	spreadsheetID, sheetName, valueInputOption string,
+	retries uint64,
+) (*Writer, error) {
+	sheetService, err := sheets.NewService(ctx, option.WithHTTPClient(oauthCfg.Client(ctx, token)))
 	if err != nil {
 		return nil, err
 	}
@@ -103,5 +110,6 @@ func (w *Writer) Write(ctx context.Context, records []sdk.Record) error {
 		}
 		return err
 	}
+	w.retryCount = 0
 	return nil
 }
