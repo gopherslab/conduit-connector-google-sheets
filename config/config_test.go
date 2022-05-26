@@ -1,4 +1,4 @@
-// Copyright © 2022 Meroxa, Inc.
+// Copyright © 2022 Meroxa, Inc. & Gophers Lab Technologies Pvt. Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ func TestParse(t *testing.T) {
 	}{{
 		name:   "missing required params",
 		config: map[string]string{},
-		err:    fmt.Errorf(`"google.credentialsFile" config value must be set`),
+		err:    fmt.Errorf(`"credentialsFile" config value must be set`),
 		want:   Config{},
 	}, {
 		name: "config succeeds",
@@ -56,7 +56,7 @@ func TestParse(t *testing.T) {
 			KeyCredentialsFile: validCredFile,
 			KeySheetURL:        "https://docs.google.com/spreadsheets/d/19VVe4M-j8MGw-a3B7fcJQnx5JnHjiHf9dwChUkqQ4/edit#gid=158080911",
 		},
-		err:  fmt.Errorf(`"google.tokensFile" config value must be set`),
+		err:  fmt.Errorf(`"tokensFile" config value must be set`),
 		want: Config{},
 	}, {
 		name: "missing required sheets url params",
@@ -64,7 +64,7 @@ func TestParse(t *testing.T) {
 			KeyTokensFile:      validCredFile,
 			KeyCredentialsFile: validCredFile,
 		},
-		err:  fmt.Errorf(`"google.sheetsURL" config value must be set`),
+		err:  fmt.Errorf(`"sheetsURL" config value must be set`),
 		want: Config{},
 	}, {
 		name: "missing gid in sheets url",

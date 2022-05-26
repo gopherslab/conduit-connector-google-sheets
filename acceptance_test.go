@@ -1,5 +1,5 @@
 /*
-Copyright © 2022 Meroxa, Inc.
+Copyright © 2022 Meroxa, Inc. & Gophers Lab Technologies Pvt. Ltd.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -92,19 +92,19 @@ func TestAcceptance(t *testing.T) {
 	}
 
 	sourceConfig := map[string]string{
-		"google.credentialsFile": credFilePath,
-		"google.tokensFile":      tokenFilePath,
-		"google.sheetsURL":       sheetURL,
-		"pollingPeriod":          "1s", // Configurable polling period
+		"credentialsFile": credFilePath,
+		"tokensFile":      tokenFilePath,
+		"sheetsURL":       sheetURL,
+		"pollingPeriod":   "1s", // Configurable polling period
 	}
 
 	destConfig := map[string]string{
-		"google.credentialsFile":  credFilePath,
-		"google.tokensFile":       tokenFilePath,
-		"google.sheetsURL":        sheetURL,
-		"google.sheetName":        sheetName,
-		"google.valueInputOption": "USER_ENTERED",
-		"bufferSize":              "10",
+		"credentialsFile":  credFilePath,
+		"tokensFile":       tokenFilePath,
+		"sheetsURL":        sheetURL,
+		"sheetName":        sheetName,
+		"valueInputOption": "USER_ENTERED",
+		"bufferSize":       "10",
 	}
 
 	ctx := context.Background()
@@ -179,7 +179,7 @@ func (d AcceptanceTestDriver) WriteToSource(t *testing.T, recs []sdk.Record) []s
 	dest := d.Connector().NewDestination()
 	// write to source and not the destination
 	destConfig := d.SourceConfig(t)
-	destConfig["google.sheetName"] = sheetName
+	destConfig["sheetName"] = sheetName
 	err := dest.Configure(ctx, destConfig)
 	is.NoErr(err)
 

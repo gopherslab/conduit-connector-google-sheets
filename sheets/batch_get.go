@@ -1,5 +1,5 @@
 /*
-Copyright © 2022 Meroxa, Inc.
+Copyright © 2022 Meroxa, Inc. & Gophers Lab Technologies Pvt. Ltd.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -36,20 +36,20 @@ const majorDimension = "ROWS"
 
 type BatchReader struct {
 	// If an error encountered, after how much time duration, the api should hit next.
-	nextRun              time.Time
-	spreadsheetID        string
-	sheetID              int64
+	nextRun       time.Time
+	spreadsheetID string
+	sheetID       int64
 	// retry mechanism after getting http error status. maximum is 3.
-	retryCount           int64
-	sheets               *sheets.Service
-	pollingPeriod        time.Duration
-	// Determines how dates, times, and durations in the response should be rendered. 
-	// This is ignored if responseValueRenderOption is FORMATTED_VALUE. 
+	retryCount    int64
+	sheets        *sheets.Service
+	pollingPeriod time.Duration
+	// dateTimeRenderOption Determines how dates, times, and durations in the response should be rendered.
+	// This is ignored if responseValueRenderOption is FORMATTED_VALUE.
 	// The default dateTime render option is SERIAL_NUMBER.
 	dateTimeRenderOption string
-	//Determines how values in the response should be rendered. 
-	//The default render option is FORMATTED_VALUE.
-	valueRenderOption    string
+	// valueRenderOption Determines how values in the response should be rendered.
+	// The default render option is FORMATTED_VALUE.
+	valueRenderOption string
 }
 
 type BatchReaderArgs struct {

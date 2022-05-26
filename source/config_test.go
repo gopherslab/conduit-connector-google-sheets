@@ -1,4 +1,4 @@
-/* Copyright © 2022 Meroxa, Inc.
+/* Copyright © 2022 Meroxa, Inc. & Gophers Lab Technologies Pvt. Ltd.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ func TestParse(t *testing.T) {
 		{
 			testCase: "Checking against default values",
 			params:   map[string]string{},
-			err:      fmt.Errorf("\"google.credentialsFile\" config value must be set"),
+			err:      fmt.Errorf("\"credentialsFile\" config value must be set"),
 			expected: Config{},
 		},
 		{
@@ -52,7 +52,7 @@ func TestParse(t *testing.T) {
 				config.KeySheetURL:        "",
 				KeyPollingPeriod:          "",
 			},
-			err:      fmt.Errorf("\"google.credentialsFile\" config value must be set"),
+			err:      fmt.Errorf("\"credentialsFile\" config value must be set"),
 			expected: Config{},
 		},
 		{
@@ -63,7 +63,7 @@ func TestParse(t *testing.T) {
 				config.KeySheetURL:        "",
 				KeyPollingPeriod:          "",
 			},
-			err:      fmt.Errorf("\"google.tokensFile\" config value must be set"),
+			err:      fmt.Errorf("\"tokensFile\" config value must be set"),
 			expected: Config{},
 		},
 		{
@@ -73,7 +73,7 @@ func TestParse(t *testing.T) {
 				config.KeyCredentialsFile: validCredFile,
 				config.KeySheetURL:        "",
 			},
-			err:      fmt.Errorf("\"google.sheetsURL\" config value must be set"),
+			err:      fmt.Errorf("\"sheetsURL\" config value must be set"),
 			expected: Config{},
 		},
 		{
