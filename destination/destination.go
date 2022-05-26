@@ -30,7 +30,7 @@ type Destination struct {
 	sdk.UnimplementedDestination
 
 	buffer   []sdk.Record
-	AckCache []sdk.AckFunc
+	ackCache []sdk.AckFunc
 	err      error
 	mux      *sync.Mutex
 	config   Config
@@ -55,21 +55,20 @@ func (d *Destination) Configure(ctx context.Context,
 		BufferSize:       sheetsConfig.BufferSize,
 		ValueInputOption: sheetsConfig.ValueInputOption,
 	}
-
+	d.mux = &sync.Mutex{}
 	return nil
 }
 
 // Open makes sure everything is prepared to receive records.
 func (d *Destination) Open(ctx context.Context) error {
-	d.mux = &sync.Mutex{}
-
 	// initializing the buffer
 	d.buffer = make([]sdk.Record, 0, d.config.BufferSize)
-	d.AckCache = make([]sdk.AckFunc, 0, d.config.BufferSize)
+	d.ackCache = make([]sdk.AckFunc, 0, d.config.BufferSize)
 
 	writer, err := sheets.NewWriter(
 		ctx,
-		d.config.Client,
+		d.config.OAuthConfig,
+		d.config.OAuthToken,
 		d.config.GoogleSpreadsheetID,
 		d.config.SheetName,
 		d.config.ValueInputOption,
@@ -99,7 +98,7 @@ func (d *Destination) WriteAsync(ctx context.Context,
 	defer d.mux.Unlock()
 
 	d.buffer = append(d.buffer, r)
-	d.AckCache = append(d.AckCache, ack)
+	d.ackCache = append(d.ackCache, ack)
 
 	if len(d.buffer) >= int(d.config.BufferSize) {
 		err := d.Flush(ctx)
@@ -123,13 +122,13 @@ func (d *Destination) Flush(ctx context.Context) error {
 	}
 
 	// call all the written records ackFunctions
-	for _, ack := range d.AckCache {
+	for _, ack := range d.ackCache {
 		err := ack(d.err)
 		if err != nil {
 			return fmt.Errorf("failed acknowledgement: %w", err)
 		}
 	}
-	d.AckCache = d.AckCache[:0]
+	d.ackCache = d.ackCache[:0]
 
 	return nil
 }

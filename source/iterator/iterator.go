@@ -20,7 +20,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/conduitio/conduit-connector-google-sheets/sheets"
@@ -42,12 +41,11 @@ type SheetsIterator struct {
 // NewSheetsIterator creates a new instance of sheets iterator and starts polling google sheets api for new changes
 // using the row offset of last successful row read in a separate go routine, row offset is received in sheet position
 func NewSheetsIterator(ctx context.Context,
-	client *http.Client,
 	tp position.SheetPosition,
 	args sheets.BatchReaderArgs,
 ) (*SheetsIterator, error) {
-	tmbWithCtx, ctx := tomb.WithContext(ctx)
-	sheets, err := sheets.NewBatchReader(ctx, client, args)
+	tmbWithCtx, _ := tomb.WithContext(ctx)
+	sheets, err := sheets.NewBatchReader(ctx, args)
 	if err != nil {
 		return nil, fmt.Errorf("error initializing sheets BatchReader: %w", err)
 	}
@@ -119,7 +117,7 @@ func (c *SheetsIterator) flush() error {
 }
 
 // HasNext returns whether there are any more records to be returned
-func (c *SheetsIterator) HasNext(_ context.Context) bool {
+func (c *SheetsIterator) HasNext() bool {
 	return len(c.buffer) > 0 || !c.tomb.Alive() // return true if tomb is dead, call to Next() will return error
 }
 

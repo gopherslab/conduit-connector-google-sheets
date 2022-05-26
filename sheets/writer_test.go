@@ -24,13 +24,14 @@ import (
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/oauth2"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
 )
 
 func TestWriter_NoRecord(t *testing.T) {
 	ctx := context.Background()
-	writer, err := NewWriter(ctx, &http.Client{}, "dummy_spreadsheet_id", "Sheet", "", 3)
+	writer, err := NewWriter(ctx, &oauth2.Config{}, &oauth2.Token{}, "dummy_spreadsheet_id", "Sheet", "", 3)
 	assert.NoError(t, err)
 	err = writer.Write(ctx, nil)
 	assert.NoError(t, err)

@@ -19,7 +19,6 @@ package source
 import (
 	"context"
 	"fmt"
-	"net/http"
 
 	"github.com/conduitio/conduit-connector-google-sheets/sheets"
 	"github.com/conduitio/conduit-connector-google-sheets/source/iterator"
@@ -32,13 +31,12 @@ import (
 type Source struct {
 	sdk.UnimplementedSource
 
-	client     *http.Client
-	iterator   Iterator
-	configData Config
+	iterator Iterator
+	conf     Config
 }
 
 type Iterator interface {
-	HasNext(ctx context.Context) bool
+	HasNext() bool
 	Next(ctx context.Context) (sdk.Record, error)
 	Stop()
 }
@@ -53,9 +51,8 @@ func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
 	if err != nil {
 		return err
 	}
-	s.configData = sheetsConfig
+	s.conf = sheetsConfig
 
-	s.client = s.configData.Client
 	return nil
 }
 
@@ -66,13 +63,15 @@ func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
 		return fmt.Errorf("couldn't parse position: %w", err)
 	}
 
-	s.iterator, err = iterator.NewSheetsIterator(ctx, s.client, pos,
+	s.iterator, err = iterator.NewSheetsIterator(ctx, pos,
 		sheets.BatchReaderArgs{
-			SpreadsheetID:        s.configData.GoogleSpreadsheetID,
-			SheetID:              s.configData.GoogleSheetID,
-			DateTimeRenderOption: s.configData.DateTimeRenderOption,
-			ValueRenderOption:    s.configData.ValueRenderOption,
-			PollingPeriod:        s.configData.PollingPeriod,
+			OAuthConfig:          s.conf.OAuthConfig,
+			OAuthToken:           s.conf.OAuthToken,
+			SpreadsheetID:        s.conf.GoogleSpreadsheetID,
+			SheetID:              s.conf.GoogleSheetID,
+			DateTimeRenderOption: s.conf.DateTimeRenderOption,
+			ValueRenderOption:    s.conf.ValueRenderOption,
+			PollingPeriod:        s.conf.PollingPeriod,
 		},
 	)
 
@@ -84,7 +83,7 @@ func (s *Source) Open(ctx context.Context, rp sdk.Position) error {
 
 // Read gets the next object
 func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
-	if !s.iterator.HasNext(ctx) {
+	if !s.iterator.HasNext() {
 		return sdk.Record{}, sdk.ErrBackoffRetry
 	}
 
@@ -97,10 +96,9 @@ func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
 
 // Teardown is called by the conduit server to stop the source connector
 // all the cleanup should be done in this function
-func (s *Source) Teardown(_ context.Context) error {
+func (s *Source) Teardown(context.Context) error {
 	if s.iterator != nil {
 		s.iterator.Stop()
-		s.iterator = nil
 	}
 	return nil
 }

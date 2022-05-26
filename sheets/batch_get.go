@@ -26,6 +26,7 @@ import (
 	"github.com/conduitio/conduit-connector-google-sheets/source/position"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
+	"golang.org/x/oauth2"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
@@ -45,6 +46,8 @@ type BatchReader struct {
 }
 
 type BatchReaderArgs struct {
+	OAuthConfig          *oauth2.Config
+	OAuthToken           *oauth2.Token
 	SpreadsheetID        string
 	SheetID              int64
 	DateTimeRenderOption string
@@ -52,8 +55,8 @@ type BatchReaderArgs struct {
 	PollingPeriod        time.Duration
 }
 
-func NewBatchReader(ctx context.Context, sClient *http.Client, args BatchReaderArgs) (*BatchReader, error) {
-	sheetService, err := sheets.NewService(ctx, option.WithHTTPClient(sClient))
+func NewBatchReader(ctx context.Context, args BatchReaderArgs) (*BatchReader, error) {
+	sheetService, err := sheets.NewService(ctx, option.WithHTTPClient(args.OAuthConfig.Client(ctx, args.OAuthToken)))
 	if err != nil {
 		return nil, err
 	}

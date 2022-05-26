@@ -97,7 +97,6 @@ func TestParse(t *testing.T) {
 			err: nil,
 			expected: Config{
 				Config: config.Config{
-					Client:              nil,
 					GoogleSpreadsheetID: "19VVe4M-j8MGw-a3B7fcJQnx5JnHjiHf9dwChUkqQ4",
 					GoogleSheetID:       158080911,
 				},
@@ -117,7 +116,6 @@ func TestParse(t *testing.T) {
 			err: nil,
 			expected: Config{
 				Config: config.Config{
-					Client:              nil,
 					GoogleSpreadsheetID: "19VVe4M-j8MGw-a3B7fcJQnx5JnHjiHf9dwChUkqQ4",
 					GoogleSheetID:       158080911,
 				},
@@ -135,7 +133,8 @@ func TestParse(t *testing.T) {
 				assert.EqualError(t, err, tc.err.Error())
 			} else {
 				assert.NoError(t, err)
-				tc.expected.Client = cfg.Client
+				tc.expected.OAuthConfig = cfg.OAuthConfig
+				tc.expected.OAuthToken = cfg.OAuthToken
 				assert.EqualValues(t, tc.expected, cfg)
 			}
 		})
