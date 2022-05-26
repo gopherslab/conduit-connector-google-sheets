@@ -49,7 +49,7 @@ func TestNewBatchReader(t *testing.T) {
 		valueRenderOption:    "SOME_OTHER_VALUE",
 		pollingPeriod:        3 * time.Second,
 	}
-	want.sheets = got.sheets
+	want.sheetSvc = got.sheetSvc
 	assert.Equal(t, want, got)
 }
 
@@ -147,7 +147,7 @@ func TestBatchReader_GetSheetRecords_429(t *testing.T) {
 		nextRun:       time.Time{},
 		spreadsheetID: "dummy_spreadsheet",
 		sheetID:       1234,
-		sheets:        sheetSvc,
+		sheetSvc:      sheetSvc,
 		pollingPeriod: 10 * time.Second,
 	}
 	ctx := context.Background()
@@ -177,12 +177,12 @@ func TestBatchReader_GetSheetRecords_500(t *testing.T) {
 		nextRun:       time.Time{},
 		spreadsheetID: "dummy_spreadsheet",
 		sheetID:       1234,
-		sheets:        sheetSvc,
+		sheetSvc:      sheetSvc,
 		pollingPeriod: 10 * time.Second,
 	}
 	ctx := context.Background()
 	_, err = cursor.GetSheetRecords(ctx, 10)
-	assert.EqualError(t, err, "googleapi: got HTTP response code 500 with body: ")
+	assert.EqualError(t, err, "error getting sheet(gid:1234) values, googleapi: got HTTP response code 500 with body: ")
 }
 
 func TestBatchReader_GetSheetRecords_304(t *testing.T) {
@@ -205,7 +205,7 @@ func TestBatchReader_GetSheetRecords_304(t *testing.T) {
 		nextRun:       time.Time{},
 		spreadsheetID: "dummy_spreadsheet",
 		sheetID:       1234,
-		sheets:        sheetSvc,
+		sheetSvc:      sheetSvc,
 		pollingPeriod: 10 * time.Second,
 	}
 	ctx := context.Background()

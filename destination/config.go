@@ -52,7 +52,7 @@ const (
 type Config struct {
 	config.Config
 	SheetName string
-	// How the data is to be interpreted by the google sheets
+	// How the data is to be interpreted by the Google sheets
 	// In case of USER_ENTERED, the data is inserted similar to data insertion from browser
 	// In RAW, the data is inserted without any parsing
 	ValueInputOption string
@@ -64,7 +64,7 @@ type Config struct {
 func Parse(cfg map[string]string) (Config, error) {
 	sharedConfig, err := config.Parse(cfg)
 	if err != nil {
-		return Config{}, err
+		return Config{}, fmt.Errorf("error parsing shared config, %w", err)
 	}
 
 	sheetName := cfg[KeySheetName]

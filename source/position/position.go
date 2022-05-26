@@ -31,20 +31,16 @@ type SheetPosition struct {
 
 // ParseRecordPosition is used to parse the sdk.Position to SheetPosition type
 func ParseRecordPosition(p sdk.Position) (SheetPosition, error) {
-	var (
-		err            error
-		recordPosition SheetPosition
-	)
+	var recordPosition SheetPosition
 
 	if p == nil {
-		return SheetPosition{}, err
+		return SheetPosition{}, nil
 	}
 
-	err = json.Unmarshal(p, &recordPosition)
-	if err != nil {
+	if err := json.Unmarshal(p, &recordPosition); err != nil {
 		return SheetPosition{}, fmt.Errorf("could not parse the position timestamp: %w", err)
 	}
-	return recordPosition, err
+	return recordPosition, nil
 }
 
 // RecordPosition converts the SheetPosition to sdk.Position to be returned in sdk.Record

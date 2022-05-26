@@ -30,12 +30,19 @@ import (
 )
 
 type SheetsIterator struct {
-	sheets    *sheets.BatchReader
+	// sheetsReader is the instance of BatchReader, which is a wrapper calling BatchGet Google sheets API
+	sheetsReader *sheets.BatchReader
+	// rowOffset is the row number of the last fetched row
 	rowOffset int64
-	tomb      *tomb.Tomb
-	ticker    *time.Ticker
-	caches    chan []sdk.Record
-	buffer    chan sdk.Record
+	// tomb is used to manage the go routines lifecycle
+	tomb *tomb.Tomb
+	// ticker is used to poll for new data in regular intervals
+	ticker *time.Ticker
+	// caches keeps the slice of records fetched from one google sheet API call
+	caches chan []sdk.Record
+	// buffer is subscribed by Next function to read for new data
+	// and block till new data becomes available, in case all the records have been read
+	buffer chan sdk.Record
 }
 
 // NewSheetsIterator creates a new instance of sheets iterator and starts polling google sheets api for new changes
@@ -45,18 +52,20 @@ func NewSheetsIterator(ctx context.Context,
 	args sheets.BatchReaderArgs,
 ) (*SheetsIterator, error) {
 	tmbWithCtx, _ := tomb.WithContext(ctx)
-	sheets, err := sheets.NewBatchReader(ctx, args)
+	sheetsReader, err := sheets.NewBatchReader(ctx, args)
 	if err != nil {
 		return nil, fmt.Errorf("error initializing sheets BatchReader: %w", err)
 	}
 
 	cdc := &SheetsIterator{
-		sheets:    sheets,
-		rowOffset: tp.RowOffset,
-		tomb:      tmbWithCtx,
-		caches:    make(chan []sdk.Record, 1),
-		buffer:    make(chan sdk.Record, 1),
-		ticker:    time.NewTicker(args.PollingPeriod),
+		sheetsReader: sheetsReader,
+		rowOffset:    tp.RowOffset,
+		tomb:         tmbWithCtx,
+		ticker:       time.NewTicker(args.PollingPeriod),
+		// keeping the length as 1 to be able to have 2nd cache of records ready when the first batch of records are successfully read
+		caches: make(chan []sdk.Record, 1),
+		// keeping the buffer size as one, to enable checking the availability of records using len() function on channel
+		buffer: make(chan sdk.Record, 1),
 	}
 
 	cdc.tomb.Go(cdc.startIterator(ctx))
@@ -74,7 +83,7 @@ func (c *SheetsIterator) startIterator(ctx context.Context) func() error {
 			case <-c.tomb.Dying():
 				return c.tomb.Err()
 			case <-c.ticker.C:
-				records, err := c.sheets.GetSheetRecords(ctx, c.rowOffset)
+				records, err := c.sheetsReader.GetSheetRecords(ctx, c.rowOffset)
 				if err != nil {
 					return fmt.Errorf("unable to fetch records: %w", err)
 				}
@@ -124,6 +133,8 @@ func (c *SheetsIterator) HasNext() bool {
 // Next returns the next record in buffer and error in case there are no more records
 // and there was an error leading to tomb dying or context was cancelled
 func (c *SheetsIterator) Next(ctx context.Context) (sdk.Record, error) {
+	// block till new records become available
+	// or no records are available and application is stopped or go routines die
 	select {
 	case rec := <-c.buffer:
 		return rec, nil
@@ -134,8 +145,9 @@ func (c *SheetsIterator) Next(ctx context.Context) (sdk.Record, error) {
 	}
 }
 
-// Stop stops the go routines
-func (c *SheetsIterator) Stop() {
+// Stop the go routines and ticker
+func (c *SheetsIterator) Stop(ctx context.Context) {
+	sdk.Logger(ctx).Trace().Msg("iterator stopped")
 	c.ticker.Stop()
 	c.tomb.Kill(errors.New("iterator stopped"))
 }

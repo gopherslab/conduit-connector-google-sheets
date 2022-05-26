@@ -54,7 +54,7 @@ func TestWriter_Succeeds(t *testing.T) {
 	assert.NoError(t, err)
 	ctx := context.Background()
 	writer := &Writer{
-		sheets:           sheetSvc,
+		sheetSvc:         sheetSvc,
 		sheetName:        "sheet",
 		spreadsheetID:    "dummy",
 		valueInputOption: "USER_ENTERED",
@@ -80,7 +80,7 @@ func TestWriter_429(t *testing.T) {
 	assert.NoError(t, err)
 	ctx := context.Background()
 	writer := &Writer{
-		sheets:           sheetSvc,
+		sheetSvc:         sheetSvc,
 		sheetName:        "sheet",
 		spreadsheetID:    "dummy",
 		valueInputOption: "USER_ENTERED",

@@ -134,7 +134,7 @@ func TestStreamIterator_Stop(t *testing.T) {
 		tomb:   &tomb.Tomb{},
 		ticker: time.NewTicker(time.Second),
 	}
-	cdc.Stop()
+	cdc.Stop(context.Background())
 	assert.False(t, cdc.tomb.Alive())
 }
 

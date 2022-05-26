@@ -35,17 +35,22 @@ import (
 const majorDimension = "ROWS"
 
 type BatchReader struct {
-	// If an error encountered, after how much time duration, the api should hit next.
-	nextRun       time.Time
+	// spreadsheet ID of the Google sheet
 	spreadsheetID string
-	sheetID       int64
-	// retry mechanism after getting http error status. maximum is 3.
-	retryCount    int64
-	sheets        *sheets.Service
+	// gid of the sheet extracted from the sheet URL <url>#gid=<gid>
+	sheetID int64
+	// instance of sheets service, used to interact with Google Sheets APIs
+	sheetSvc *sheets.Service
+	// If rate limit is exceeded, nextRun is used to skip hitting API till the specified time.
+	// Exponential backoff is used to decide nextRun time on rate-limit error, uses retryCount*pollingPeriod seconds as duration
+	nextRun time.Time
+	// polling period defined in the config, it is used to implement exponential backoff
 	pollingPeriod time.Duration
+	// the count of unsuccessful retries made after getting 429(rate-limit exceeded) http error status.
+	retryCount int64
 	// dateTimeRenderOption Determines how dates, times, and durations in the response should be rendered.
 	// This is ignored if responseValueRenderOption is FORMATTED_VALUE.
-	// The default dateTime render option is SERIAL_NUMBER.
+	// The default dateTime render option is FORMATTED_STRING for the connector.
 	dateTimeRenderOption string
 	// valueRenderOption Determines how values in the response should be rendered.
 	// The default render option is FORMATTED_VALUE.
@@ -65,13 +70,13 @@ type BatchReaderArgs struct {
 func NewBatchReader(ctx context.Context, args BatchReaderArgs) (*BatchReader, error) {
 	sheetService, err := sheets.NewService(ctx, option.WithHTTPClient(args.OAuthConfig.Client(ctx, args.OAuthToken)))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error creating sheets service client: %w", err)
 	}
 	return &BatchReader{
 		spreadsheetID:        args.SpreadsheetID,
 		sheetID:              args.SheetID,
 		pollingPeriod:        args.PollingPeriod,
-		sheets:               sheetService,
+		sheetSvc:             sheetService,
 		dateTimeRenderOption: args.DateTimeRenderOption,
 		valueRenderOption:    args.ValueRenderOption,
 	}, nil
@@ -79,54 +84,56 @@ func NewBatchReader(ctx context.Context, args BatchReaderArgs) (*BatchReader, er
 
 // GetSheetRecords returns the list of records up to a maximum of 1000 rows(default limit)
 // added after the row offset of last successfully read record
-func (g *BatchReader) GetSheetRecords(ctx context.Context, offset int64) ([]sdk.Record, error) {
-	if g.nextRun.After(time.Now()) {
+func (b *BatchReader) GetSheetRecords(ctx context.Context, offset int64) ([]sdk.Record, error) {
+	if b.nextRun.After(time.Now()) {
 		return nil, nil
 	}
 
-	res, err := g.sheets.Spreadsheets.Values.BatchGetByDataFilter(g.spreadsheetID, g.getDataFilter(offset)).Context(ctx).Do()
+	res, err := b.sheetSvc.Spreadsheets.Values.BatchGetByDataFilter(b.spreadsheetID, b.getDataFilter(offset)).Context(ctx).Do()
 	if err != nil {
 		if googleapi.IsNotModified(err) {
 			return nil, nil
 		}
 		if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == http.StatusTooManyRequests {
-			g.retryCount++
-			duration := time.Duration(g.retryCount * int64(g.pollingPeriod)) // exponential back off
-			g.nextRun = time.Now().Add(duration)
+			b.retryCount++
+			duration := time.Duration(b.retryCount * int64(b.pollingPeriod)) // exponential back off
+			b.nextRun = time.Now().Add(duration)
 			sdk.Logger(ctx).Error().
-				Int64("retry_count", g.retryCount).
+				Int64("retry_count", b.retryCount).
 				Float64("wait_duration", duration.Seconds()).
 				Msg("exponential back off, rate limit exceeded")
 			return nil, nil
 		}
-		return nil, err
+		return nil, fmt.Errorf("error getting sheet(gid:%v) values, %w", b.sheetID, err)
 	}
 
-	g.retryCount = 0
-	return g.valueRangesToRecords(res.ValueRanges, offset)
+	b.retryCount = 0
+	return b.valueRangesToRecords(res.ValueRanges, offset)
 }
 
-func (g *BatchReader) getDataFilter(offset int64) *sheets.BatchGetValuesByDataFilterRequest {
+func (b *BatchReader) getDataFilter(offset int64) *sheets.BatchGetValuesByDataFilterRequest {
 	dataFilters := make([]*sheets.DataFilter, 0)
 	dataFilters = append(dataFilters, &sheets.DataFilter{
 		GridRange: &sheets.GridRange{
-			SheetId:       g.sheetID,
+			SheetId:       b.sheetID,
 			StartRowIndex: offset,
 		},
 	})
 	return &sheets.BatchGetValuesByDataFilterRequest{
 		DataFilters:          dataFilters,
-		DateTimeRenderOption: g.dateTimeRenderOption,
+		DateTimeRenderOption: b.dateTimeRenderOption,
 		MajorDimension:       majorDimension,
-		ValueRenderOption:    g.valueRenderOption,
+		ValueRenderOption:    b.valueRenderOption,
 	}
 }
 
-func (g *BatchReader) valueRangesToRecords(valueRanges []*sheets.MatchedValueRange, offset int64) ([]sdk.Record, error) {
+func (b *BatchReader) valueRangesToRecords(valueRanges []*sheets.MatchedValueRange, offset int64) ([]sdk.Record, error) {
 	records := make([]sdk.Record, 0)
+	// iterate over all the value ranges fetched from the Google sheet BatchGet API request
 	for i := range valueRanges {
 		values := valueRanges[i].ValueRange.Values
-		// values := valueRange.Values
+		// Iterate over the Rows of the value range
+		// Data is of format: [][]interface{} => ([ [ROW1 => A1,B1,C1..], [ROW2 => A2, B2, C2,...],...])
 		for index, val := range values {
 			if len(val) == 0 {
 				continue
@@ -138,8 +145,8 @@ func (g *BatchReader) valueRangesToRecords(valueRanges []*sheets.MatchedValueRan
 			rowOffset := offset + int64(index) + 1
 			lastRowPosition := position.SheetPosition{
 				RowOffset:     rowOffset,
-				SpreadsheetID: g.spreadsheetID,
-				SheetID:       g.sheetID,
+				SpreadsheetID: b.spreadsheetID,
+				SheetID:       b.sheetID,
 			}
 
 			records = append(records, sdk.Record{

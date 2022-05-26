@@ -38,7 +38,7 @@ type Source struct {
 type Iterator interface {
 	HasNext() bool
 	Next(ctx context.Context) (sdk.Record, error)
-	Stop()
+	Stop(ctx context.Context)
 }
 
 func NewSource() sdk.Source {
@@ -46,13 +46,12 @@ func NewSource() sdk.Source {
 }
 
 // Configure validates the passed config and prepares the source connector
-func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
+func (s *Source) Configure(_ context.Context, cfg map[string]string) error {
 	sheetsConfig, err := Parse(cfg)
 	if err != nil {
-		return err
+		return fmt.Errorf("error parsing source config: %w", err)
 	}
 	s.conf = sheetsConfig
-
 	return nil
 }
 
@@ -89,6 +88,7 @@ func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
 
 	r, err := s.iterator.Next(ctx)
 	if err != nil {
+		// skip wrapping the error, return the error as is
 		return sdk.Record{}, err
 	}
 	return r, nil
@@ -96,14 +96,15 @@ func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
 
 // Teardown is called by the conduit server to stop the source connector
 // all the cleanup should be done in this function
-func (s *Source) Teardown(context.Context) error {
+func (s *Source) Teardown(ctx context.Context) error {
 	if s.iterator != nil {
-		s.iterator.Stop()
+		s.iterator.Stop(ctx)
 	}
 	return nil
 }
 
 // Ack is called by the conduit server after the record has been successfully processed by all destination connectors
+// We do not need to send any ack to Google sheets as we poll the Sheets API for data, so there is no data to be ack'd
 func (s *Source) Ack(ctx context.Context, tp sdk.Position) error {
 	pos, err := position.ParseRecordPosition(tp)
 	if err != nil {

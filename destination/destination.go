@@ -28,13 +28,19 @@ import (
 // Destination connector
 type Destination struct {
 	sdk.UnimplementedDestination
-
-	buffer   []sdk.Record
+	// buffer holds the records for asynchronous write to google sheets
+	buffer []sdk.Record
+	// ackCache holds the ack functions for the records currently buffered
+	// i-th index of ackCache is the ack function of record buffered at i-th index
 	ackCache []sdk.AckFunc
-	err      error
-	mux      *sync.Mutex
-	config   Config
-	writer   *sheets.Writer
+	// err holds the last error encountered by the connector
+	err error
+	// config holds the destination config
+	config Config
+	// writer is the instance of sheets writer, which is a wrapper over sheets write API
+	writer *sheets.Writer
+
+	mux *sync.Mutex
 }
 
 func NewDestination() sdk.Destination {
@@ -81,11 +87,14 @@ func (d *Destination) Open(ctx context.Context) error {
 	return nil
 }
 
-// WriteAsync writes a record into a Destination. Typically Destination maintains an in-memory
-// buffer and doesn't actually perform a write until the buffer has enough
+// WriteAsync writes a record into a Destination. Typically, Destination maintains an in-memory
+// buffer and doesn't actually perform write until the buffer has enough
 // records in it. This is done for performance reasons.
 func (d *Destination) WriteAsync(ctx context.Context,
 	r sdk.Record, ack sdk.AckFunc) error {
+	// If either Destination or Writer have encountered an error, there's no point in
+	// accepting more records. We better signal the error up the stack and force
+	// the server to maybe re-instantiate plugin or do something else about it.
 	if d.err != nil {
 		return d.err
 	}
@@ -133,7 +142,7 @@ func (d *Destination) Flush(ctx context.Context) error {
 	return nil
 }
 
-// Teardown gracefully disconnects the client
+// Teardown writes all the pending records to sheets and gracefully disconnects the client
 func (d *Destination) Teardown(ctx context.Context) error {
 	defer func() {
 		d.writer = nil

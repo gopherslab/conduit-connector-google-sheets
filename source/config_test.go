@@ -41,7 +41,7 @@ func TestParse(t *testing.T) {
 		{
 			testCase: "Checking against default values",
 			params:   map[string]string{},
-			err:      fmt.Errorf("\"credentialsFile\" config value must be set"),
+			err:      fmt.Errorf("error parsing shared config, \"credentialsFile\" config value must be set"),
 			expected: Config{},
 		},
 		{
@@ -52,7 +52,7 @@ func TestParse(t *testing.T) {
 				config.KeySheetURL:        "",
 				KeyPollingPeriod:          "",
 			},
-			err:      fmt.Errorf("\"credentialsFile\" config value must be set"),
+			err:      fmt.Errorf("error parsing shared config, \"credentialsFile\" config value must be set"),
 			expected: Config{},
 		},
 		{
@@ -63,7 +63,7 @@ func TestParse(t *testing.T) {
 				config.KeySheetURL:        "",
 				KeyPollingPeriod:          "",
 			},
-			err:      fmt.Errorf("\"tokensFile\" config value must be set"),
+			err:      fmt.Errorf("error parsing shared config, \"tokensFile\" config value must be set"),
 			expected: Config{},
 		},
 		{
@@ -73,7 +73,7 @@ func TestParse(t *testing.T) {
 				config.KeyCredentialsFile: validCredFile,
 				config.KeySheetURL:        "",
 			},
-			err:      fmt.Errorf("\"sheetsURL\" config value must be set"),
+			err:      fmt.Errorf("error parsing shared config, \"sheetsURL\" config value must be set"),
 			expected: Config{},
 		},
 		{

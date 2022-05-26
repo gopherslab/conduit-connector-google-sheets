@@ -33,12 +33,18 @@ import (
 const insertDataOption = "INSERT_ROWS"
 
 type Writer struct {
-	sheets           *sheets.Service
-	sheetName        string
-	spreadsheetID    string
+	// instance of sheets service, used to interact with Google Sheets APIs
+	sheetSvc *sheets.Service
+	// name of the sheet to write to, required for writing API
+	sheetName string
+	// spreadsheet ID of the Google sheet
+	spreadsheetID string
+	// valueInputOption defines whether the data is to be inserted in USER_ENTERED mode or RAW mode
 	valueInputOption string
-	maxRetries       uint64
-	retryCount       uint64
+	// maxRetries is the maximum retries to be made before returning an error, in case of 429(rate-limit exceeded error)
+	maxRetries uint64
+	// the number of unsuccessful retries made with error 429, since last successful data write
+	retryCount uint64
 }
 
 func NewWriter(
@@ -50,27 +56,28 @@ func NewWriter(
 ) (*Writer, error) {
 	sheetService, err := sheets.NewService(ctx, option.WithHTTPClient(oauthCfg.Client(ctx, token)))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error creating sheets(%s) service client: %w", sheetName, err)
 	}
 	return &Writer{
 		spreadsheetID:    spreadsheetID,
-		sheets:           sheetService,
+		sheetSvc:         sheetService,
 		sheetName:        sheetName,
 		valueInputOption: valueInputOption,
 		maxRetries:       retries,
 	}, nil
 }
 
-// Write function writes the records to google sheets
+// Write function writes the records to google sheet
 func (w *Writer) Write(ctx context.Context, records []sdk.Record) error {
 	var rows [][]interface{}
 
-	// Looping on every record and unmarhsalling to google-sheets format.
+	// Looping on every record and unmarshalling to google-sheet format.
+	// Row format: [val1, val2, ...]
 	for index, rowRecord := range records {
 		rowArr := make([]interface{}, 0)
 		err := json.Unmarshal(rowRecord.Payload.Bytes(), &rowArr)
 		if err != nil {
-			return fmt.Errorf("at index %d unable to marshal the record %w", index, err)
+			return fmt.Errorf("unable to marshal the record(index:%d) %w", index, err)
 		}
 		rows = append(rows, rowArr)
 	}
@@ -86,7 +93,7 @@ func (w *Writer) Write(ctx context.Context, records []sdk.Record) error {
 		Values:         rows,
 	}
 
-	_, err := w.sheets.Spreadsheets.Values.Append(
+	_, err := w.sheetSvc.Spreadsheets.Values.Append(
 		w.spreadsheetID, w.sheetName,
 		sheetValueFormat).ValueInputOption(
 		w.valueInputOption).InsertDataOption(
@@ -108,7 +115,7 @@ func (w *Writer) Write(ctx context.Context, records []sdk.Record) error {
 				return w.Write(ctx, records)
 			}
 		}
-		return err
+		return fmt.Errorf("appending rows to sheet(%s) failed: %w", w.sheetName, err)
 	}
 	w.retryCount = 0
 	return nil

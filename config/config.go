@@ -99,6 +99,7 @@ func Parse(config map[string]string) (Config, error) {
 	// parse sheets url
 	spreadSheetID, sheetID, err := parseSheetURL(sheetURL)
 	if err != nil {
+		// skip wrapping error, getting wrapped error from parseSheetURL function
 		return Config{}, err
 	}
 

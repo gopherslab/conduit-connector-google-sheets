@@ -52,7 +52,7 @@ type Config struct {
 func Parse(cfg map[string]string) (Config, error) {
 	commonConfig, err := config.Parse(cfg)
 	if err != nil {
-		return Config{}, err
+		return Config{}, fmt.Errorf("error parsing shared config, %w", err)
 	}
 	// Time interval being an optional value
 	interval := strings.TrimSpace(cfg[KeyPollingPeriod])
