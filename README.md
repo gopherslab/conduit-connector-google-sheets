@@ -33,7 +33,12 @@ make test
 
 ## Generating credentials
 
-In order to generate credentials.json, please follow [this link](https://developers.google.com/workspace/guides/create-credentials).
+To run this connector, you need the following prerequisites:
+
+* A Google account.
+* A Google Cloud Platform project with the API enabled. To create a project and enable an API, refer to [Create a project and enable the API](https://developers.google.com/workspace/guides/create-project).
+* Authorization credentials for a desktop application. To learn how to create credentials for a desktop application, refer to [Create credentials](https://developers.google.com/workspace/guides/create-credentials).
+
 After the credentials.json is generated, download the json file and place it inside your root project. To generate token file(i.e token_UnixTimeStamp.json),
 run `./google-token-gen` from the root project. A browser window will open, to verify the gmail account followed by the consent page.
 
