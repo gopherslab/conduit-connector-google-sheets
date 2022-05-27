@@ -95,8 +95,8 @@ The config passed to `Configure` in source connector can contain the following f
 | `credentialsFile`          | Path to credentials file which can be downloaded from Google Cloud Platform(in .json format) to authorise the user.            | yes     | "path://to/credential/file"                                        |
 | `tokensFile`               | Path to file in .json format which includes the `access_token`, `token_type`, `refresh_token` and `expiry`.                    | yes     | "path://to/token/file"                                             |
 | `sheetsURL`                | URL of the google spreadsheet(copy the entire url from the address bar).                                                       | yes     | "https://docs.google.com/spreadsheets/d/dummy_spreadsheet_id/edit#gid=0" |
-| `DateTimeRenderOption`     | Format of the Date/time related values. Valid values: SERIAL_NUMBER, FORMATTED_STRING                                          | no      | "FORMATTED_STRING"                                                 |
-| `ValueRenderOption`        | Format of the dynamic/reference data. Valid values: FORMATTED_VALUE, UNFORMATTED_VALUE, FORMULA                                | no      | "FORMATTED_VALUE"                                                  |
+| `dateTimeRenderOption`     | Format of the Date/time related values. Valid values: SERIAL_NUMBER, FORMATTED_STRING                                          | no      | "FORMATTED_STRING"                                                 |
+| `valueRenderOption`        | Format of the dynamic/reference data. Valid values: FORMATTED_VALUE, UNFORMATTED_VALUE, FORMULA                                | no      | "FORMATTED_VALUE"                                                  |
 | `pollingPeriod`            | time interval between two consecutive hits. Can be in format as s for seconds, m for minutes, h for hours (for eg: 2s; 2m; 2h) | no      | "6s"                                                               |
 
 ### Known Limitations
