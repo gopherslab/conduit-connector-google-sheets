@@ -98,7 +98,7 @@ func (b *BatchReader) GetSheetRecords(ctx context.Context, offset int64) ([]sdk.
 			b.retryCount++
 			duration := time.Duration(b.retryCount * int64(b.pollingPeriod)) // exponential back off
 			b.nextRun = time.Now().Add(duration)
-			sdk.Logger(ctx).Error().
+			sdk.Logger(ctx).Error().Err(gerr).
 				Int64("retry_count", b.retryCount).
 				Float64("wait_duration", duration.Seconds()).
 				Msg("exponential back off, rate limit exceeded")
@@ -129,16 +129,19 @@ func (b *BatchReader) getDataFilter(offset int64) *sheets.BatchGetValuesByDataFi
 
 func (b *BatchReader) valueRangesToRecords(valueRanges []*sheets.MatchedValueRange, offset int64) ([]sdk.Record, error) {
 	records := make([]sdk.Record, 0)
+
+	// As we can fetch multiple ranges in one BatchGetByDataFilter request
 	// iterate over all the value ranges fetched from the Google sheet BatchGet API request
-	for i := range valueRanges {
-		values := valueRanges[i].ValueRange.Values
+	// https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/batchGetByDataFilter#response-body
+	for _, valueRange := range valueRanges {
+		rowValues := valueRange.ValueRange.Values
 		// Iterate over the Rows of the value range
 		// Data is of format: [][]interface{} => ([ [ROW1 => A1,B1,C1..], [ROW2 => A2, B2, C2,...],...])
-		for index, val := range values {
-			if len(val) == 0 {
+		for index, rowValue := range rowValues {
+			if len(rowValue) == 0 {
 				continue
 			}
-			rawData, err := json.Marshal(val)
+			rawData, err := json.Marshal(rowValue)
 			if err != nil {
 				return records, fmt.Errorf("error marshaling the map: %w", err)
 			}
