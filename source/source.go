@@ -88,7 +88,8 @@ func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
 
 	r, err := s.iterator.Next(ctx)
 	if err != nil {
-		// skip wrapping the error, return the error as is
+		// Next will return context canceled error, to signal graceful stop, as expected by conduit server
+		// in case of other error wrapped errors will be returned
 		return sdk.Record{}, err
 	}
 	return r, nil

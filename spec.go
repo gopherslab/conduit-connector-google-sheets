@@ -62,6 +62,11 @@ func Specification() sdk.Specification {
 				Required:    false,
 				Description: "Max API retries to be attempted, in case of 429 error, before returning error",
 			},
+			destination.KeyBufferSize: {
+				Default:     "100",
+				Required:    false,
+				Description: "max rows to be appended in one API call",
+			},
 		},
 		SourceParams: map[string]sdk.Parameter{
 			config.KeyCredentialsFile: {

@@ -41,9 +41,7 @@ const (
 	// the ValueInputOption parameter
 	defaultValueInputOption = "USER_ENTERED"
 
-	// maxBufferSize determines maximum buffer size a config can accept.
-	// When config with bigger buffer size is parsed, an error is returned.
-	maxBufferSize = 100
+	defaultBufferSize = "100"
 
 	defaultMaxRetries = "3"
 )
@@ -85,7 +83,7 @@ func Parse(cfg map[string]string) (Config, error) {
 
 	bufferSizeString := cfg[KeyBufferSize]
 	if bufferSizeString == "" {
-		bufferSizeString = fmt.Sprintf("%v", maxBufferSize)
+		bufferSizeString = defaultBufferSize
 	}
 
 	bufferSize, err := strconv.ParseUint(bufferSizeString, 10, 64)
@@ -93,15 +91,6 @@ func Parse(cfg map[string]string) (Config, error) {
 		return Config{}, fmt.Errorf(
 			"%q config value should be a positive integer",
 			KeyBufferSize,
-		)
-	}
-
-	if bufferSize > maxBufferSize {
-		return Config{}, fmt.Errorf(
-			"%q config value should not be bigger than %d, got %d",
-			KeyBufferSize,
-			maxBufferSize,
-			bufferSize,
 		)
 	}
 
