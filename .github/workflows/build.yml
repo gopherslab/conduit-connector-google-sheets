@@ -1,0 +1,25 @@
+name: build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.17
+
+      - name: Test
+        run: make test GOTEST_FLAGS="-v -count=1"
+        env:
+          CONDUIT_GOOGLE_CREDENTIAL_JSON: ${{ secrets.CONDUIT_GOOGLE_CREDENTIAL_JSON }}
+          CONDUIT_GOOGLE_TOKEN_JSON: ${{ secrets.CONDUIT_GOOGLE_TOKEN_JSON }}
+          CONDUIT_GOOGLE_SHEET_URL: ${{ secrets.CONDUIT_GOOGLE_SHEET_URL }}
+          CONDUIT_GOOGLE_SHEET_NAME: ${{ secrets.CONDUIT_GOOGLE_SHEET_NAME }}

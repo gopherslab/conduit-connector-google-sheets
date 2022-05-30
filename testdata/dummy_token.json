@@ -1,0 +1,6 @@
+{
+    "access_token": "dummy_access_token",
+    "token_type": "Bearer",
+    "refresh_token": "dummy_refresh_token",
+    "expiry": "2022-05-16T18:49:26.005987+05:30"
+}
