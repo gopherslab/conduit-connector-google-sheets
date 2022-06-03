@@ -21,7 +21,6 @@ import (
 	"math/rand"
 	"os"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -29,7 +28,6 @@ import (
 	"github.com/conduitio/conduit-connector-google-sheets/destination"
 	"github.com/conduitio/conduit-connector-google-sheets/source"
 	sdk "github.com/conduitio/conduit-connector-sdk"
-	"github.com/matryer/is"
 	"go.uber.org/goleak"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
@@ -144,12 +142,7 @@ func TestAcceptance(t *testing.T) {
 				DestinationConfig: destConfig,
 				BeforeTest: func(t *testing.T) {
 				},
-				GoleakOptions: []goleak.Option{goleak.IgnoreCurrent(), goleak.IgnoreTopFunction("internal/poll.runtime_pollWait")},
-				Skip: []string{
-					// skipped because it uses pre-written generateRecord function, which doesn't generate data in g sheets format
-					// leading to the test always failing
-					"TestDestination_WriteAsync_Success",
-				},
+				GoleakOptions: []goleak.Option{goleak.IgnoreCurrent()},
 				AfterTest: func(t *testing.T) {
 					// clear sheet after every test to ensure clean sheet for next test
 					offset = 0
@@ -165,54 +158,24 @@ type AcceptanceTestDriver struct {
 	sdk.ConfigurableAcceptanceTestDriver
 }
 
-func (d AcceptanceTestDriver) WriteToSource(t *testing.T, recs []sdk.Record) []sdk.Record {
-	if d.Connector().NewDestination == nil {
-		t.Fatal("connector is missing the field NewDestination, either implement the destination or overwrite the driver method Write")
-	}
-
-	is := is.New(t)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	// writing something to the destination should result in the same record
-	// being produced by the source
-	dest := d.Connector().NewDestination()
-	// write to source and not the destination
-	destConfig := d.SourceConfig(t)
-	destConfig["sheetName"] = sheetName
-	err := dest.Configure(ctx, destConfig)
-	is.NoErr(err)
-
-	err = dest.Open(ctx)
-	is.NoErr(err)
-	recs = d.generateRecords(len(recs))
-	// try to write using WriteAsync and fallback to Write if it's not supported
-	err = d.writeAsync(ctx, dest, recs)
-	is.NoErr(err)
-
-	cancel() // cancel context to simulate stop
-	err = dest.Teardown(context.Background())
-	is.NoErr(err)
-	return recs
-}
-
-func (d AcceptanceTestDriver) generateRecords(count int) []sdk.Record {
-	records := make([]sdk.Record, count)
-	for i := range records {
-		records[i] = d.generateRecord(offset + i)
-	}
-	offset += len(records)
-	return records
-}
-
-func (d AcceptanceTestDriver) generateRecord(i int) sdk.Record {
+// GenerateRecord overrides the pre-defined generate record function to generate the records in required google sheets compatible format
+// It generates payload with 4 column row as payload
+// Sample Record:
+// {
+//      "metadata": null,
+//		"position": "{\"row_offset\":1, \"spreadsheet_id\":\"some_id\", \"sheet_id\":123}"
+//      "created_at": "0001-01-01 00:00:00 +0000 UTC",
+//      "key": 123,
+//      "payload": "[\"a\",\"b\",\"c\",\"d\"]"
+//}
+func (d AcceptanceTestDriver) GenerateRecord(*testing.T) sdk.Record {
 	payload := fmt.Sprintf(`["%s","%s","%s","%s"]`, d.randString(32), d.randString(32), d.randString(32), d.randString(32))
-	i++
+	offset++
 	return sdk.Record{
-		Position:  sdk.Position(fmt.Sprintf(`{"row_offset":%v, "spreadsheet_id":%v, "sheet_id":%v}`, i, spreadsheetID, sheetID)),
+		Position:  sdk.Position(fmt.Sprintf(`{"row_offset":%v, "spreadsheet_id":%v, "sheet_id":%v}`, offset, spreadsheetID, sheetID)),
 		Metadata:  nil,
 		CreatedAt: time.Time{},
-		Key:       sdk.RawData(fmt.Sprintf("%v", i)),
+		Key:       sdk.RawData(fmt.Sprintf("%v", offset)),
 		Payload:   sdk.RawData(payload),
 	}
 }
@@ -241,39 +204,4 @@ func (d AcceptanceTestDriver) randString(n int) string {
 		remain--
 	}
 	return sb.String()
-}
-
-// writeAsync writes records to destination using Destination.WriteAsync.
-func (d AcceptanceTestDriver) writeAsync(ctx context.Context, dest sdk.Destination, records []sdk.Record) error {
-	var waitForAck sync.WaitGroup
-	var ackErr error
-
-	for _, r := range records {
-		waitForAck.Add(1)
-		ack := func(err error) error {
-			defer waitForAck.Done()
-			if ackErr == nil { // only overwrite a nil error
-				ackErr = err
-			}
-			return nil
-		}
-		err := dest.WriteAsync(ctx, r, ack)
-		if err != nil {
-			return err
-		}
-	}
-
-	// flush to make sure the records get written to the destination
-	err := dest.Flush(ctx)
-	if err != nil {
-		return err
-	}
-
-	waitForAck.Wait()
-	if ackErr != nil {
-		return ackErr
-	}
-
-	// records were successfully written
-	return nil
 }
